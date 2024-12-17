@@ -2,7 +2,7 @@
 
 ## architecture du projet 
 
-''' r
+```r
 
 LLM-RAG-Recettes/
 ├── app/                   # Code principal de l'application
@@ -39,4 +39,4 @@ LLM-RAG-Recettes/
 ├── .gitignore             # Fichiers/dossiers à ignorer par Git
 └── README.md              # Description du projet
 
-'''
+```
