@@ -1,65 +1,40 @@
 import streamlit as st
+import base64
 
-def main():
-    st.set_page_config(page_title="Recettes Personnalisées", page_icon="🍴", layout="wide")
+st.set_page_config(page_title="NutriGénie", page_icon="assets/logo.png", layout="wide")
 
-    # En-tête de l'application
-    st.title("🍴 Recettes Personnalisées")
-    st.subheader("Des recettes adaptées à vos objectifs nutritionnels")
 
-    # Menu latéral
-    with st.sidebar:
-        st.header("Menu")
-        mode = st.radio("Choisissez une option :", [
-            "Accueil",
-            "Générer une recette",
-            "Liste de courses",
-            "Historique de repas",
-            "Tableau de bord"
-        ])
+def add_logo():
 
-    # Sections principales
-    if mode == "Accueil":
-        st.write("Bienvenue sur l'application de génération de recettes personnalisées !")
-        st.image("https://via.placeholder.com/600x300", caption="Une alimentation équilibrée pour tous.")
-        st.markdown("### Fonctionnalités :")
-        st.write("- **Génération de recettes personnalisées**")
-        st.write("- **Création automatique de listes de courses**")
-        st.write("- **Suggestions basées sur vos repas précédents**")
-        st.write("- **Suivi des objectifs nutritionnels**")
+    # Lecture du fichier image local
+    with open("assets/logo.png", "rb") as f:
+        logo_data = base64.b64encode(f.read()).decode()
 
-    elif mode == "Générer une recette":
-        st.header("Générer une recette personnalisée")
-        objectif = st.selectbox("Quel est votre objectif ?", [
-            "Prise de masse",
-            "Perte de poids",
-            "Repas équilibré quotidien"
-        ])
-        ingredients_disponibles = st.text_area("Listez les ingrédients disponibles :", "ex: poulet, riz, brocoli")
+    st.markdown(
+        f"""
+        <style>
+            [data-testid="stSidebarNav"] {{
+                background-image: url("data:image/png;base64,{logo_data}");
+                background-repeat: no-repeat;
+                padding-top: 275px;
+                background-position: center 20px;
+                background-size: 50%;
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        if st.button("Générer la recette"):
-            st.success(f"Voici une recette pour {objectif} avec les ingrédients : {ingredients_disponibles}")
-            st.write("\nRecette : Poulet grillé avec riz et brocoli sauté.")
 
-    elif mode == "Liste de courses":
-        st.header("Votre liste de courses")
-        st.write("Générez une liste d'ingrédients automatiquement en fonction des recettes choisies.")
-        if st.button("Créer ma liste de courses"):
-            st.success("Voici votre liste de courses : \n- Poulet\n- Riz\n- Brocoli\n- Épices")
+add_logo()
+# Définition des onglets
 
-    elif mode == "Historique de repas":
-        st.header("Historique de vos repas")
-        st.write("Suivez vos repas pour des suggestions mieux adaptées.")
-        st.text_area("Ajoutez les repas consommés aujourd'hui :", "ex: Petit-déjeuner: smoothie aux fruits")
-        if st.button("Mettre à jour l'historique"):
-            st.success("Historique mis à jour avec succès !")
+# Définition des onglets
+accueil = st.Page("onglets/accueil.py", title="🏠 Accueil")
+generate_recette = st.Page("onglets/generate_recette.py", title="📊 Générer une recette")
+course_list = st.Page("onglets/course_list.py", title="🛒 Liste de courses")
+historique = st.Page("onglets/historique.py", title="📜 Historique de repas")
+dashboard = st.Page("onglets/dashboard.py", title="📊 Tableau de bord")
 
-    elif mode == "Tableau de bord":
-        st.header("Tableau de bord")
-        st.write("Visualisez vos progrès nutritionnels et vos objectifs.")
-        st.metric(label="Calories consommées aujourd'hui", value="1800 kcal", delta="-200 kcal")
-        st.metric(label="Protéines", value="120 g", delta="+20 g")
-        st.metric(label="Lipides", value="50 g", delta="-10 g")
-
-if __name__ == "__main__":
-    main()
+pg = st.navigation([accueil, generate_recette, course_list, historique, dashboard])
+pg.run()
