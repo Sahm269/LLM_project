@@ -1,0 +1,67 @@
+{
+    "tables": {
+      "utilisateurs": {
+        "columns": [
+          {"name": "id_utilisateur", "type": "INTEGER", "constraints": ["PRIMARY KEY", "AUTOINCREMENT"]},
+          {"name": "login", "type": "TEXT", "constraints": ["UNIQUE", "NOT NULL"]},
+          {"name": "mot_de_passe", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "nom", "type": "TEXT", "constraints": []},
+          {"name": "objectifs_nutritionnels", "type": "TEXT", "constraints": []},
+          {"name": "preferences_alimentaires", "type": "TEXT", "constraints": []},
+          {"name": "email", "type": "TEXT", "constraints": []},
+          {"name": "date_creation", "type": "TEXT", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
+          {"name": "date_derniere_connexion", "type": "TEXT", "constraints": []}
+        ]
+      },
+      "recettes": {
+        "columns": [
+          {"name": "id_recette", "type": "INTEGER", "constraints": ["PRIMARY KEY", "AUTOINCREMENT"]},
+          {"name": "titre", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "ingredients", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "instructions", "type": "TEXT", "constraints": []},
+          {"name": "temps_preparation", "type": "INTEGER", "constraints": []},
+          {"name": "calories_par_portion", "type": "INTEGER", "constraints": []},
+          {"name": "objectif_nutritionnel", "type": "TEXT", "constraints": []}
+        ]
+      },
+      "historique_repas": {
+        "columns": [
+          {"name": "id_historique", "type": "INTEGER", "constraints": ["PRIMARY KEY", "AUTOINCREMENT"]},
+          {"name": "id_utilisateur", "type": "INTEGER", "constraints": ["NOT NULL"]},
+          {"name": "id_recette", "type": "INTEGER", "constraints": ["NOT NULL"]},
+          {"name": "date_heure", "type": "TEXT", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
+          {"name": "quantite", "type": "INTEGER", "constraints": []}
+        ]
+      },
+      "historique_requetes_llm": {
+        "columns": [
+          {"name": "id_requete", "type": "INTEGER", "constraints": ["PRIMARY KEY", "AUTOINCREMENT"]},
+          {"name": "id_utilisateur", "type": "INTEGER", "constraints": ["NOT NULL"]},
+          {"name": "requete", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "reponse_llm", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "date_heure", "type": "TEXT", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
+          {"name": "temps_traitement", "type": "REAL", "constraints": []},
+          {"name": "contexte", "type": "TEXT", "constraints": []}
+        ]
+      },
+      "liste_courses": {
+        "columns": [
+          {"name": "id_liste", "type": "INTEGER", "constraints": ["PRIMARY KEY", "AUTOINCREMENT"]},
+          {"name": "id_utilisateur", "type": "INTEGER", "constraints": ["NOT NULL"]},
+          {"name": "ingredients", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "date_creation", "type": "TEXT", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
+          {"name": "status", "type": "TEXT", "constraints": []}
+        ]
+      },
+      "suggestions_repas": {
+        "columns": [
+          {"name": "id_suggestion", "type": "INTEGER", "constraints": ["PRIMARY KEY", "AUTOINCREMENT"]},
+          {"name": "id_utilisateur", "type": "INTEGER", "constraints": ["NOT NULL"]},
+          {"name": "repas_suggestion", "type": "TEXT", "constraints": ["NOT NULL"]},
+          {"name": "date_heure", "type": "TEXT", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
+          {"name": "motif_suggestion", "type": "TEXT", "constraints": []}
+        ]
+      }
+    }
+  }
+  
