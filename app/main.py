@@ -31,10 +31,10 @@ add_logo()
 
 # Définition des onglets
 accueil = st.Page("onglets/accueil.py", title="🏠 Accueil")
-generate_recette = st.Page("onglets/generate_recette.py", title="📊 Générer une recette")
-course_list = st.Page("onglets/course_list.py", title="🛒 Liste de courses")
+chatbot = st.Page("onglets/chatbot.py", title="📊 Chat Bot")
+course_list = st.Page("onglets/mealplan.py", title="🛒 Weekly meal")
 historique = st.Page("onglets/historique.py", title="📜 Historique de repas")
 dashboard = st.Page("onglets/dashboard.py", title="📊 Tableau de bord")
 
-pg = st.navigation([accueil, generate_recette, course_list, historique, dashboard])
+pg = st.navigation([accueil, chatbot, course_list, historique, dashboard])
 pg.run()
