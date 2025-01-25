@@ -55,7 +55,7 @@ def create_conversation(title):
 def load_messages(conversation_id):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC", (conversation_id,)) #Peut etre à sort par datetime ?
+    c.execute("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC", (conversation_id,))
     data = [{"role": row[0], "content": row[1]} for row in c.fetchall()]
     conn.close()
     return data
@@ -63,10 +63,18 @@ def load_messages(conversation_id):
 def load_conversations():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT * FROM conversations ORDER BY created_at DESC") #Peut etre à sort par datetime ?
+    c.execute("SELECT * FROM conversations ORDER BY created_at DESC") 
     data = c.fetchall()
     conn.close()
     return data
+
+def update_conversation(conversation_id):
+    conn = sqlite3.connect(DB_NAME)
+    new_timer = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    c = conn.cursor()
+    c.execute("UPDATE conversations SET created_at = ? WHERE id = ?",(new_timer, conversation_id))
+    conn.commit()
+    conn.close()
 
 
 
@@ -79,6 +87,20 @@ init_db()
 
 # Interface Streamlit
 st.set_page_config(page_title="Nutrigénie", layout="wide")
+# Section pour afficher l'historique de la conversation
+conversation_history = load_conversations()
+st.sidebar.title("Navigation")
+
+# Barre latérale : Liste des conversations
+st.sidebar.title("Historique")
+for conversation_id,_, title in conversation_history:
+    if st.sidebar.button(title):
+        # Charger la conversation sélectionnée
+        st.session_state.conversation_id = conversation_id
+        st.session_state.messages = load_messages(conversation_id)
+        update_conversation(conversation_id= st.session_state.conversation_id)
+        st.rerun()
+
 # Diviser la page en deux colonnes pour simuler deux barres latérales
 st.title("Parlez au Nutrigénie")
 # Historique de la conversation
@@ -125,19 +147,6 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     st.session_state.messages.append({"role": "assistant", "content": response})
     save_message(conversation_id=st.session_state.conversation_id, role="assistant", content=response)
 
-# Section pour afficher l'historique de la conversation
-conversation_history = load_conversations()
-
-st.sidebar.title("Navigation")
-
-# Barre latérale : Liste des conversations
-st.sidebar.title("Historique")
-for conversation_id,_, title in conversation_history:
-    if st.sidebar.button(title):
-        # Charger la conversation sélectionnée
-        st.session_state.conversation_id = conversation_id
-        st.session_state.messages = load_messages(conversation_id)
-        st.rerun()
 
 
 
