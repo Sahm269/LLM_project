@@ -4,11 +4,14 @@ from mistralai import Mistral
 from datetime import datetime
 import time
 import numpy as np
+from mistralai.models.sdkerror import SDKError
 
 
 # Configuration de la base de données SQLite
 DB_NAME = "chat_history.db"
-conversation_id = None
+# Initialisation du client Mistral
+api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
+mistral_client = Mistral(api_key=api_key)
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -76,11 +79,40 @@ def update_conversation(conversation_id):
     conn.commit()
     conn.close()
 
-
-
-# Initialisation du client Mistral
-api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
-mistral_client = Mistral(api_key=api_key)
+def get_title(text, max_retries=3):
+    retries = 0
+    while retries < max_retries:
+        try:
+            # Tentative d'appel à l'API Mistral
+            chat_response = mistral_client.chat.complete(
+                model=st.session_state["mistral_model"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Résume le sujet de l'instruction ou de la question suivante en quelques mots. Ta réponse doit faire 30 caractères au maximum.",
+                    },
+                    {
+                        "role": "user",
+                        "content": text,
+                    },
+                ]
+            )
+            # Retourner le résultat si l'appel réussit
+            return chat_response.choices[0].message.content
+        except Exception as e:
+            # Vérifier explicitement si l'erreur est une 429 (rate limit exceeded)
+            if hasattr(e, "status_code") and e.status_code == 429:
+                retries += 1
+                wait_time = 2 ** retries  # Temps d'attente exponentiel
+                st.warning(f"Limite de requêtes atteinte (429). Nouvel essai dans {wait_time} secondes...")
+                time.sleep(wait_time)
+            else:
+                # Gérer d'autres types d'erreurs
+                st.error(f"Erreur inattendue : {str(e)}")
+                return "Erreur : Impossible de traiter votre demande."
+    # Si tous les retries échouent, retourner un message d'erreur
+    st.error("Impossible d'obtenir une réponse après plusieurs tentatives.")
+    return "Erreur : Limite de requêtes atteinte après plusieurs tentatives."
 
 # Initialisation de la base de données
 init_db()
@@ -90,18 +122,34 @@ st.set_page_config(page_title="Nutrigénie", layout="wide")
 # Section pour afficher l'historique de la conversation
 conversation_history = load_conversations()
 st.sidebar.title("Navigation")
-
-# Barre latérale : Liste des conversations
 st.sidebar.title("Historique")
-for conversation_id,_, title in conversation_history:
-    if st.sidebar.button(title):
-        # Charger la conversation sélectionnée
-        st.session_state.conversation_id = conversation_id
-        st.session_state.messages = load_messages(conversation_id)
-        update_conversation(conversation_id= st.session_state.conversation_id)
-        st.rerun()
 
-# Diviser la page en deux colonnes pour simuler deux barres latérales
+for conversation_id, _, title in conversation_history:
+    if "conversation_id" in st.session_state and st.session_state.conversation_id == conversation_id:
+        # Bouton désactivé pour la conversation active
+        st.sidebar.button(f"🟢 {title}", key=f"conversation_{conversation_id}", disabled=True)
+    else:
+        # Bouton actif pour les autres conversations
+        if st.sidebar.button(title, key=f"conversation_{conversation_id}"):
+            # Charger la conversation sélectionnée
+            st.session_state.conversation_id = conversation_id
+            st.session_state.messages = load_messages(conversation_id)
+            update_conversation(conversation_id=st.session_state.conversation_id)
+            st.rerun()
+
+# CSS pour arrondir les bords de l'image
+st.markdown(
+    """
+    <style>
+    .rounded-image {
+        border-radius: 50%; /* Arrondi à 50% pour un effet circulaire */
+        display: block;    /* Assure un bon alignement */
+        margin: auto;      /* Centre l'image horizontalement */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.title("Parlez au Nutrigénie")
 # Historique de la conversation
 if "conversation_id" not in st.session_state:
@@ -118,34 +166,61 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    if message["role"] == "user":
+        with st.chat_message("user"):  # Utilisez votre avatar utilisateur
+            st.markdown(message["content"])
+    elif message["role"] == "assistant":
+        with st.chat_message("assistant", avatar="avatar_bot.jpg"):  # Avatar personnalisé pour l'assistant
+            st.markdown(message["content"])
 
 if prompt := st.chat_input("Dîtes quelque-chose"):
     if st.session_state.conversation_id is None:
-        title = prompt[:30]  # Utiliser le début du message comme titre
+        title = get_title(text=prompt)  # Utiliser le début du message comme titre
         st.session_state.conversation_id = create_conversation(title=title)
     st.session_state.messages.append({"role": "user", "content": prompt})
     save_message(conversation_id=st.session_state.conversation_id, role="user", content=prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
-        stream_response = mistral_client.chat.stream(
-            model=st.session_state["mistral_model"],
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ]
-        )
-        response = ""
-        response_placeholder = st.empty()
-        for chunk in stream_response:
-            response += chunk.data.choices[0].delta.content
-            response_placeholder.markdown(response)
-            time.sleep(0.03)
-    st.session_state.messages.append({"role": "assistant", "content": response})
-    save_message(conversation_id=st.session_state.conversation_id, role="assistant", content=response)
+    with st.chat_message("assistant", avatar = "avatar_bot.jpg"):
+        retries = 0
+        max_retries = 3
+        while retries < max_retries:
+            try:
+                # Tentative d'appel à l'API Mistral
+                stream_response = mistral_client.chat.stream(
+                    model=st.session_state["mistral_model"],
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.messages
+                    ]
+                )
+                response = ""
+                response_placeholder = st.empty()
+                # Traiter la réponse en streaming
+                for chunk in stream_response:
+                    response += chunk.data.choices[0].delta.content
+                    response_placeholder.markdown(response)
+                    time.sleep(0.03)  # Petit délai pour simuler le flux en temps réel
+                break  # Si le streaming réussit, on sort de la boucle
+            except Exception as e:
+                if hasattr(e, "status_code") and e.status_code == 429:
+                    # Gestion explicite de l'erreur 429 (Rate Limit Exceeded)
+                    retries += 1
+                    wait_time = 2 ** retries  # Délai exponentiel : 2, 4, 8 secondes
+                    st.warning(f"Limite de requêtes atteinte (429). Nouvel essai dans {wait_time} secondes...")
+                    time.sleep(wait_time)
+                else:
+                    # Gestion d'autres types d'erreurs
+                    st.error(f"Une erreur est survenue : {str(e)}")
+                    response_placeholder.markdown("Erreur lors de la génération de la réponse.")
+                    break
+        # Si toutes les tentatives échouent, message d'erreur final
+        if retries == max_retries:
+            st.error("Impossible d'obtenir une réponse après plusieurs tentatives.")
+            response = "Erreur : Limite de requêtes atteinte après plusieurs tentatives."
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        save_message(conversation_id=st.session_state.conversation_id, role="assistant", content=response)
 
 
 
