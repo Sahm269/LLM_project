@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import extras
 import json
 import pandas as pd
 from typing import List, Dict, Tuple
@@ -13,6 +14,7 @@ class DBManager:
         :param db_config: Dictionnaire avec les informations de connexion (host, database, user, password).
         :param schema_file: Chemin vers le fichier JSON contenant le schéma de la base.
         """
+
         self.db_config = db_config
         self.schema_file = schema_file
         self.connection = None
@@ -20,6 +22,7 @@ class DBManager:
         self._load_schema()
         self._connect_to_database()
         self._create_database()
+        
 
     def _load_schema(self):
         """Charge le schéma de base de données depuis un fichier JSON."""
@@ -32,7 +35,7 @@ class DBManager:
     def _connect_to_database(self):
         """Établit une connexion avec la base PostgreSQL."""
         try:
-            self.connection = psycopg2.connect(**self.db_config)
+            self.connection = psycopg2.connect(**self.db_config, cursor_factory=extras.DictCursor)
             self.cursor = self.connection.cursor()
         except Exception as e:
             raise ConnectionError(f"Erreur de connexion : {e}")
@@ -115,3 +118,10 @@ class DBManager:
         """Exécute une requête SELECT personnalisée et retourne les résultats."""
         self.cursor.execute(query, params)
         return self.cursor.fetchall()
+
+
+
+    def query(self, sql, params=None):
+           
+        self.cursor.execute(sql, params)
+        return self.cursor.fetchall()  

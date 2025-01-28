@@ -7,7 +7,11 @@
         {"name": "mot_de_passe", "type": "TEXT", "constraints": ["NOT NULL"]},
         {"name": "nom", "type": "TEXT", "constraints": []},
         {"name": "objectifs_nutritionnels", "type": "TEXT", "constraints": []},
-        {"name": "preferences_alimentaires", "type": "TEXT", "constraints": []},
+        {"name": "poids", "type": "INTEGER", "constraints": []},
+        {"name": "Taille", "type": "INTEGER", "constraints": []},
+        {"name": "activite_physique", "type": "TEXT", "constraints": []},
+        {"name": "objectif_calorique", "type": "TEXT", "constraints": []},
+        {"name": "regime_particulier", "type": "TEXT", "constraints": []},
         {"name": "email", "type": "TEXT", "constraints": []},
         {"name": "date_creation", "type": "TIMESTAMP", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
         {"name": "date_derniere_connexion", "type": "TIMESTAMP", "constraints": []}
