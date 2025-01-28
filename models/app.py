@@ -137,19 +137,6 @@ for conversation_id, _, title in conversation_history:
             update_conversation(conversation_id=st.session_state.conversation_id)
             st.rerun()
 
-# CSS pour arrondir les bords de l'image
-st.markdown(
-    """
-    <style>
-    .rounded-image {
-        border-radius: 50%; /* Arrondi à 50% pour un effet circulaire */
-        display: block;    /* Assure un bon alignement */
-        margin: auto;      /* Centre l'image horizontalement */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 st.title("Parlez au Nutrigénie")
 # Historique de la conversation
 if "conversation_id" not in st.session_state:
