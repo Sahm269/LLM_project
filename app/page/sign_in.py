@@ -16,15 +16,20 @@ def sign_in(navigate_to):
         navigate_to("inscription")
 
     if st.button("Se connecter"):
-        user = db_manager.fetch_by_condition("utilisateurs", "login = %s", (login,))
+        # Récupère l'utilisateur correspondant au login
+        user = db_manager.fetch_by_condition("utilisateurs", "login = %s", (login,))  # login est ton input utilisateur
         if user:
-            hashed_password = user[0][2]  # Colonne mot_de_passe
+            user_id = user[0][0]  # Supposons que 'id' est la première colonne
+            hashed_password = user[0][2]  # Supposons que 'mot_de_passe' est la 3ème colonne
+            
+            # Vérifie le mot de passe
             if check_password_hash(hashed_password, password):
+                # Stocke les informations utilisateur dans la session
                 st.session_state["logged_in"] = True
                 st.session_state["user"] = login
-                st.success("Connexion réussie recliquez sur le bouton pour acceder à votre session !.")
+                st.session_state["user_id"] = user_id  # Ajout de l'ID dans la session
+                st.success("Connexion réussie, recliquez sur le bouton pour accéder à votre session !.")
                 navigate_to("accueil")
-               
             else:
                 st.error("Mot de passe incorrect.")
         else:

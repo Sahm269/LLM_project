@@ -1,14 +1,15 @@
 import streamlit as st
 import sys
 import os
+from dotenv import load_dotenv
 
+# Ajouter les chemins des modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'page')))
 from sign_in import sign_in
 from sign_up import sign_up
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../data')))
-from dotenv import load_dotenv
-from dbmanager import DBManager  
+from dbmanager import DBManager
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -21,55 +22,95 @@ db_config = {
     "password": os.getenv("DB_PASSWORD"),
 }
 
-# Initialiser DBManager dans `st.session_state` si non défini
+# Mettre DBManager en cache
+@st.cache_resource
+def get_db_manager():
+    return DBManager(db_config, "../data/schema.json")
+
+# Initialiser DBManager dans st.session_state si non défini
 if "db_manager" not in st.session_state:
-    st.session_state["db_manager"] = DBManager(db_config, "../data/schema.json")
+    st.session_state["db_manager"] = get_db_manager()
 
-
-
-# Fonction pour mettre à jour l'URL avec la page courante
-def update_url(page_name):
-    st.query_params["page"] = page_name
-
-# Gestion de la session utilisateur
+# Initialisation de la session utilisateur
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "current_page" not in st.session_state:
-    current_page = st.query_params.get("page", "connexion")
-    st.session_state["current_page"] = current_page
+    st.session_state["current_page"] = "connexion"
+if "user" not in st.session_state:
+    st.session_state["user"] = None
 
-# Fonction pour la navigation
+# Gestion des paramètres d'URL
+def update_url(page_name):
+    st.experimental_set_query_params(page=page_name)
+
+def get_current_page():
+    return st.experimental_get_query_params().get("page", ["connexion"])[0]
+
+# Fonction de navigation
 def navigate_to(page_name):
     st.session_state["current_page"] = page_name
-    update_url(page_name)  # Met à jour l'URL
+    update_url(page_name)
 
+# Gestion de la déconnexion
+def logout_user():
+    keys_to_clear = ["logged_in", "user", "current_page"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    update_url("connexion")
+    navigate_to("connexion")
+
+# Gestion centralisée de la navigation
+def handle_navigation():
+    if not st.session_state["logged_in"]:
+        # Redirection vers connexion si non connecté
+        if st.session_state["current_page"] not in ["connexion", "inscription"]:
+            st.session_state["current_page"] = "connexion"
+    else:
+        # Gestion des pages disponibles pour les utilisateurs connectés
+        available_pages = ["accueil", "chatbot", "dashboard", "user"]
+        if st.session_state["current_page"] not in available_pages:
+            st.session_state["current_page"] = "accueil"
+
+# Définition des pages disponibles
+PAGES = {
+    "accueil": {"file": "page/accueil.py", "title": "Accueil"},
+    "chatbot": {"file": "page/chatbot.py", "title": "Chat Bot"},
+    "dashboard": {"file": "page/dashboard.py", "title": "Tableau de Bord"},
+    "user": {"file": "page/user.py", "title": lambda: f"Mon Compte {st.session_state.get('user', '')}"}
+}
+
+# Fonction principale
 def main():
-    # Vérifier si l'utilisateur est connecté
+    # Gestion de la navigation
+    handle_navigation()
+
+    # Si l'utilisateur est connecté
     if st.session_state["logged_in"]:
-        
+        # Définir les onglets
+        pages = []
+        for page_name, page_info in PAGES.items():
+            title = page_info["title"]
+            if callable(title):  # Si le titre est une fonction
+                title = title()
+            pages.append(st.Page(page_info["file"], title=title))
 
-        # Définition des onglets
-        accueil = st.Page("page/accueil.py", title="Accueil")
-        chatbot = st.Page("page/chatbot.py", title="Chat Bot")
-        dashboard = st.Page("page/dashboard.py", title="Tableau de bord")
-        user = st.Page("page/user.py", title=  f"mon compte {st.session_state['user']}")
-
+        # Afficher la barre latérale et gérer la déconnexion
         with st.sidebar:
             if st.button("Déconnexion"):
-                st.session_state["logged_in"] = False
-                st.session_state["current_page"] = "connexion"
-                update_url("connexion") 
+                logout_user()
 
-        pg = st.navigation([accueil, chatbot, user, dashboard])
+        # Navigation entre les pages
+        pg = st.navigation(pages)
         pg.run()
-       
-           
+
     else:
-        # Ne pas afficher la navbar sur les pages de connexion et d'inscription
+        # Ne pas afficher la barre de navigation
         if st.session_state["current_page"] == "connexion":
             sign_in(navigate_to)
         elif st.session_state["current_page"] == "inscription":
             sign_up(navigate_to)
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Nutrigénie")
     main()

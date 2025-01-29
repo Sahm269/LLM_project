@@ -8,7 +8,7 @@ def info_perso():
         st.error("Erreur : DBManager n'est pas initialisé.")
     else:
         # Récupérer les informations de l'utilisateur connecté
-        user_id = st.session_state.get("user_id", 1)  # Utilise l'ID de l'utilisateur connecté
+        user_id = st.session_state['user_id'] 
         query = f"SELECT * FROM utilisateurs WHERE id_utilisateur = {user_id}"
         user_info = db_manager.query(query)
         
@@ -38,7 +38,7 @@ def info_perso():
                     index=["Prise de masse", "Tonification", "Perdre du poids", "Vide"].index(objectifs_nutritionnels_val)
                 )
             with col2:
-                poids = st.number_input("Poids (kg)", value=user_info["poids"], step=0.1)
+                poids = st.number_input("Poids (kg)", value=user_info["poids"], step=1)
             with col3:
                 taille = st.number_input("Taille (cm)", value=user_info["taille"], step=1)
 

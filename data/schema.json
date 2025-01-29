@@ -46,6 +46,7 @@
       "columns": [
         {"name": "id_conversation", "type": "SERIAL", "constraints": ["PRIMARY KEY"]},
         {"name": "id_utilisateur", "type": "INTEGER", "constraints": ["NOT NULL", "REFERENCES utilisateurs(id_utilisateur)"]},
+        {"name": "role", "type": "TEXT", "constraints": ["NOT NULL"]},
         {"name": "title", "type": "TEXT", "constraints": ["NOT NULL"]},
         {"name": "created_at", "type": "TIMESTAMP", "constraints": ["NOT NULL"]}
       ]
@@ -54,9 +55,9 @@
       "columns": [
         {"name": "id_message", "type": "SERIAL", "constraints": ["PRIMARY KEY"]},
         {"name": "id_conversation", "type": "INTEGER", "constraints": ["NOT NULL", "REFERENCES conversations(id_conversation)"]},
-        {"name": "requete", "type": "TEXT", "constraints": ["NOT NULL"]},
-        {"name": "reponse_llm", "type": "TEXT", "constraints": ["NOT NULL"]},
-        {"name": "date_heure", "type": "TIMESTAMP", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
+        {"name": "role", "type": "TEXT", "constraints": ["NOT NULL"]},
+        {"name": "content", "type": "TEXT", "constraints": ["NOT NULL"]},
+        {"name": "timestamp", "type": "TIMESTAMP", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
         {"name": "temps_traitement", "type": "REAL", "constraints": []},
         {"name": "contexte", "type": "TEXT", "constraints": []}
       ]
