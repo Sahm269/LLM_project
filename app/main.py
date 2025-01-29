@@ -13,6 +13,7 @@ from dbmanager import DBManager
 
 # Charger les variables d'environnement
 load_dotenv()
+st.set_page_config(page_title="Nutrigénie")
 
 # Configuration de la base de données
 db_config = {
@@ -39,17 +40,10 @@ if "current_page" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = None
 
-# Gestion des paramètres d'URL
-def update_url(page_name):
-    st.experimental_set_query_params(page=page_name)
-
-def get_current_page():
-    return st.experimental_get_query_params().get("page", ["connexion"])[0]
-
 # Fonction de navigation
 def navigate_to(page_name):
     st.session_state["current_page"] = page_name
-    update_url(page_name)
+    st.rerun()
 
 # Gestion de la déconnexion
 def logout_user():
@@ -57,7 +51,6 @@ def logout_user():
     for key in keys_to_clear:
         if key in st.session_state:
             del st.session_state[key]
-    update_url("connexion")
     navigate_to("connexion")
 
 # Gestion centralisée de la navigation
@@ -66,11 +59,13 @@ def handle_navigation():
         # Redirection vers connexion si non connecté
         if st.session_state["current_page"] not in ["connexion", "inscription"]:
             st.session_state["current_page"] = "connexion"
+            st.rerun()
     else:
         # Gestion des pages disponibles pour les utilisateurs connectés
         available_pages = ["accueil", "chatbot", "dashboard", "user"]
         if st.session_state["current_page"] not in available_pages:
             st.session_state["current_page"] = "accueil"
+            st.rerun()
 
 # Définition des pages disponibles
 PAGES = {
@@ -87,7 +82,6 @@ def main():
 
     # Si l'utilisateur est connecté
     if st.session_state["logged_in"]:
-        # Définir les onglets
         pages = []
         for page_name, page_info in PAGES.items():
             title = page_info["title"]
@@ -108,9 +102,9 @@ def main():
         # Ne pas afficher la barre de navigation
         if st.session_state["current_page"] == "connexion":
             sign_in(navigate_to)
+            
         elif st.session_state["current_page"] == "inscription":
             sign_up(navigate_to)
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Nutrigénie")
     main()

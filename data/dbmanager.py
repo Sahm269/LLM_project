@@ -4,7 +4,9 @@ import json
 import pandas as pd
 from typing import List, Dict, Tuple
 import os
+import sys 
 
+sys.stdout.reconfigure(encoding='utf-8')
 
 class DBManager:
     def __init__(self, db_config: Dict, schema_file: str):
@@ -22,6 +24,8 @@ class DBManager:
         self._load_schema()
         self._connect_to_database()
         self._create_database()
+        self.cursor.execute("SET NAMES 'UTF8'")
+
         
 
     def _load_schema(self):
@@ -56,9 +60,8 @@ class DBManager:
                 column_definition += " " + " ".join(column['constraints'])
             column_definitions.append(column_definition)
         columns_str = ", ".join(column_definitions)
-
         return f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str});"
-    
+
     def insert_data_from_dict(self, table_name: str, data: List[Dict], id_column: str) -> List[int]:
         """Insère des données dans une table à partir d'une liste de dictionnaires et retourne les IDs insérés.
         
@@ -70,14 +73,15 @@ class DBManager:
         placeholders = ", ".join(['%s' for _ in data[0].keys()])
         
         # Requête pour insérer les données et retourner l'ID dynamique
-        query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) RETURNING {id_column}"
+        query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) RETURNING {id_column}"  
         
         ids = []  # Liste pour stocker les IDs retournés
         for row in data:
-            self.execute_safe(query, tuple(row.values()), fetch=True)  # Exécute la requête et récupère l'ID retourné
+            self.cursor.execute(query, tuple(row.values()))
             inserted_id = self.cursor.fetchone()[0]  # Récupère le premier (et unique) élément de la ligne retournée
             ids.append(inserted_id)
         
+        self.connection.commit()
         return ids
 
 
@@ -101,8 +105,8 @@ class DBManager:
     
     def execute_safe(self, query: str, params: Tuple = (), fetch: bool = False):
         """
-        Exécute une requête SQL avec gestion des erreurs et des transactions.
-
+        Exécute une requête SQL avec gestion centralisée des erreurs.
+        
         :param query: Requête SQL à exécuter.
         :param params: Paramètres de la requête.
         :param fetch: Indique si les résultats doivent être récupérés.
@@ -117,7 +121,6 @@ class DBManager:
         except Exception as e:
             self.connection.rollback()  # Annuler la transaction en cas d'erreur
             raise RuntimeError(f"Erreur SQL : {e} | Query : {query} | Params : {params}")
-
 
 
     def fetch_by_condition(self, table_name: str, condition: str, params: Tuple = ()) -> List[Tuple]:
@@ -148,15 +151,27 @@ class DBManager:
     def create_index(self, table_name: str, column_name: str) -> None:
         """Crée un index sur une colonne spécifique pour améliorer les performances de recherche."""
         query = f"CREATE INDEX IF NOT EXISTS idx_{table_name}_{column_name} ON {table_name} ({column_name})"
-        self.execute_safe(query)
+        self.cursor.execute(query)
+        self.connection.commit()
 
     def select(self, query: str, params: Tuple = ()) -> List[Tuple]:
         """Exécute une requête SELECT personnalisée et retourne les résultats."""
-        return self.execute_safe(query, params, fetch=True)
+        self.cursor.execute(query, params)
+        return self.cursor.fetchall()
 
-    def query(self, query: str, params=None):
+
+
+    
+    def query(self, query, params=None):
         """
         Exécute une requête SQL, en utilisant les paramètres fournis, 
         et retourne les résultats si nécessaire.
         """
-        return self.execute_safe(query, params, fetch=True)
+        self.cursor.execute(query, params)
+        
+        # Si la requête est un SELECT, récupérer les résultats
+        if query.strip().upper().startswith("SELECT"):
+            return self.cursor.fetchall()
+        
+        # Si ce n'est pas un SELECT, ne rien retourner (utile pour INSERT/UPDATE)
+        return None  

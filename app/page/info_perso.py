@@ -58,7 +58,6 @@ def info_perso():
                 objectif_calorique = st.text_input("Objectif calorique", user_info["objectif_calorique"])
 
             # Bouton pour sauvegarder toutes les informations
-            # Bouton pour sauvegarder toutes les informations
             if st.button("Mettre à jour tout"):
                 table_name = "utilisateurs"
                 
