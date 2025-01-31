@@ -1,9 +1,28 @@
 import os
 from pickle import load
-
 import streamlit as st
+import numpy as np
+from numpy.typing import NDArray
+from sentence_transformers import SentenceTransformer
+from googletrans import Translator
 
-from embeddings import get_embedding
+# Initialize the model once to avoid repeated loading
+model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+
+
+def get_embedding(documents: list[str]) -> NDArray[np.float32]:
+    """
+    Generates embeddings for a list of documents using a pre-trained SentenceTransformer model.
+
+    Args:
+        documents (list[str]): A list of strings (documents) for which embeddings are to be generated.
+
+    Returns:
+        NDArray: A NumPy array containing the embeddings for each document.
+    """
+    if isinstance(documents, str):
+        documents = [documents]
+    return model.encode(documents)
 
 
 class Guardrail:
@@ -18,8 +37,24 @@ class Guardrail:
         """
         Initializes the Guardrail class with a guardrail model instance.
         """
-        self.guardrail = guardrail_model
+        file_path = os.path.join("security","storage","guardrail_multi.pkl")
+        with open(file_path, "rb") as f:
+            self.guardrail = load(f)
 
+    async def analyze_language(self, query:str) -> bool:
+        """
+        Analyzes the given query to determine what language it is written in and whether it is english, french, german or spanish.
+
+        Args:
+            query (str): The input query to be analyzed.
+
+        Returns:
+            bool: Returns `False` if the query is not a supported language, `True` otherwise.
+        """
+        with Translator() as translator:
+            det = await translator.detect(query)
+        return det in ["en","fr","de","es"]
+    
     def analyze_query(self, query: str) -> bool:
         """
         Analyzes the given query to determine if it passes the guardrail check.
@@ -31,18 +66,5 @@ class Guardrail:
             bool: Returns `False` if the query is flagged, `True` otherwise.
         """
         embed_query = get_embedding(documents=[query])
-        pred = self.guardrail.predict(embed_query.reshape(1, -1)).item()
+        pred = self.guardrail.predict(embed_query.reshape(1, -1))
         return pred != 1  # Return True if pred is not 1, otherwise False
-
-
-file_path = "./storage/guardrail.pkl"
-if os.path.exists(file_path):
-    with open(file_path, "rb") as f:
-        guardrail_model = load(f)
-    # Create an instance of the Guardrail class
-    guardrail_instance = Guardrail()
-
-else:
-    raise RuntimeError(
-        f"Guardrail file not found: {file_path}. Please run the notebook 'notebook_training_gr.ipynb' first."
-    )

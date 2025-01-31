@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 import numpy as np
 from mistralai.models.sdkerror import SDKError
+from security.input_validation import Guardrail
 
 
 # Configuration de la base de données SQLite
@@ -168,6 +169,28 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     save_message(conversation_id=st.session_state.conversation_id, role="user", content=prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
+
+    ###################
+    #### Guardrail ####
+    ###################
+
+    try:
+        guardrail = Guardrail()
+    except Exception as e:
+        st.error(f"Guardrail not found. Please re-run the container for regeneration. Details : {e}")
+        st.stop()
+    # is_supported = await guardrail.analyze_language(prompt)
+    # if not is_supported:
+    #     st.warning("To use our bot in a safe manner, you must do the conversation in either english, french, german or spanish. If necessary you may use an online translator.")
+    #     st.stop()
+    is_safe = guardrail.analyze_query(prompt)
+    if not is_safe:
+        st.warning("The promt seems to violate our ethical considerations. We invite you to ask a different question.")
+        st.stop()
+
+    ####################
+    ###### PROMPT ######
+    ####################
 
     with st.chat_message("assistant", avatar = "avatar_bot.jpg"):
         retries = 0
