@@ -103,7 +103,7 @@ st.markdown(
 st.markdown(""" 
     <style>
         .title-container {
-            background-color: #FF9A76;
+            background-color: #6A5ACD;
             border-radius: 10px;
             color: white;
             text-align: center;

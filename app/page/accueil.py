@@ -3,12 +3,9 @@ import os
 
 st.markdown("""
     <style>
-        body, .stApp {
-            background: linear-gradient(to right, #cae7d4, #a8d8b9);
-        }
-
+     
         .main {
-            background: linear-gradient(to right, #cae7d4, #a8d8b9);
+            
             background-size: 400% 400%;
             animation: gradientAnimation 10s ease infinite;
         }
@@ -32,7 +29,7 @@ st.markdown("""
         }
 
         .stButton>button {
-            background-color: #a8d8b9;
+            background-color: #6A5ACD;
             color: white;
             border-radius: 8px;
             padding: 0.5rem 1rem;
@@ -46,9 +43,7 @@ st.markdown("""
             box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
+      
 
         h2 {
             font-size: 2rem;
