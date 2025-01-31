@@ -1,6 +1,8 @@
 import streamlit as st
 import psycopg2
 import os
+import plotly.graph_objects as go
+import pandas as pd
 from dotenv import load_dotenv
 
 # Charger les variables d'environnement depuis le fichier .env
@@ -55,9 +57,37 @@ def get_average_latency():
         cursor.close()
         conn.close()
 
+# Fonction pour récupérer le nombre de requêtes par jour
+def get_daily_requests():
+    conn = get_db_connection()
+    if conn is None:
+        return pd.DataFrame()
+    try:
+        query = """
+        SELECT
+            DATE(timestamp) AS date,
+            COUNT(*) AS nombre_requetes
+        FROM
+            messages
+        GROUP BY
+            date
+        ORDER BY
+            date;
+        """
+        df = pd.read_sql(query, conn)
+        return df
+    except Exception as e:
+        st.error(f"Erreur lors de la récupération des requêtes par jour : {e}")
+        return pd.DataFrame()
+    finally:
+        conn.close()
+
 # Récupérer les données pour afficher sur le dashboard
 total_recipes = get_recipes_count()
 average_latency = get_average_latency()
+
+# Récupérer les données des requêtes par jour
+df_requests = get_daily_requests()
 
 # Affichage de la page dashboard avec Streamlit
 st.markdown(
@@ -70,7 +100,7 @@ st.markdown(
 )
 
 # Ajouter le CSS pour les cards avec animations et un design moderne
-st.markdown("""
+st.markdown(""" 
     <style>
         .title-container {
             background-color: #FF9A76;
@@ -199,3 +229,16 @@ with col6:
             <div class="card-value">500kg CO2</div>
         </div>
     """, unsafe_allow_html=True)
+
+# Graphique des requêtes par jour
+st.markdown("### 📅 Nombre de requêtes par jour")
+
+fig = go.Figure(data=[go.Scatter(x=df_requests['date'], y=df_requests['nombre_requetes'], mode='lines+markers')])
+
+fig.update_layout(
+    xaxis_title="Date",
+    yaxis_title="Nombre de requêtes",
+    template="plotly_dark"
+)
+
+st.plotly_chart(fig)
