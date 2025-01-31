@@ -85,7 +85,7 @@ def main():
 
 
             .stButton > button {
-                background-color: #4CAF50;
+                background-color: #6A5ACD;
                 color: white;
                 font-size: 18px;
                 padding: 10px;

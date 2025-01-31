@@ -3,14 +3,9 @@ import os
 
 st.markdown("""
     <style>
+     
         body, .stApp {
             background: linear-gradient(to right, #cae7d4, #a8d8b9);
-        }
-
-        .main {
-            background: linear-gradient(to right, #cae7d4, #a8d8b9);
-            background-size: 400% 400%;
-            animation: gradientAnimation 10s ease infinite;
         }
 
         @keyframes gradientAnimation {
