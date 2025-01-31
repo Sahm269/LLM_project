@@ -31,25 +31,6 @@ st.markdown("""
             overflow: hidden;
         }
 
-        .stButton>button {
-            background-color: #a8d8b9;
-            color: white;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .stButton>button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-
         h2 {
             font-size: 2rem;
             color: #2a4b47;
@@ -96,6 +77,18 @@ st.markdown("""
             animation: fadeIn 1s ease-out;
             transition: transform 0.3s ease;
             margin-bottom: 1rem;
+            height:250px;
+        }
+            
+        .features1 {
+            background-color: #e2f4f1;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-out;
+            transition: transform 0.3s ease;
+            margin-bottom: 1rem;
+            height:200px;
         }
 
         .features:hover {
@@ -138,14 +131,28 @@ st.markdown("""
 
 logo_path = "assets/logo.png"
 
-col1, col_gap, col2 = st.columns([6, 1, 2])
+# centrer le logo
+cola, colb, colc = st.columns(3)
 
-with col1:
-    st.markdown("""
-        <h3 style="color:#2a4b47; text-align:center;">Fonctionnalités principales de l'application :</h3>
+with cola:
+    pass 
+with colb:
+    st.image(logo_path, use_container_width=True, caption=None)
+with colc:
+    pass 
+
+st.markdown("""
+        <br>
+        <h3 style="color:#2a4b47; text-align:center;">🔧 Fonctionnalités principales de l'application :</h3>
+        <br>
     """, unsafe_allow_html=True)
 
-    # Fonctionnalités
+# Fonctionnalités disposées horizontalement par paires
+col1, col2 = st.columns(2)
+
+with col1:
+
+    # Fonctionnalités 1 et 2
     st.markdown("""
         <div class="features">
             <div style="display: flex; align-items: center;">
@@ -154,13 +161,18 @@ with col1:
             </div>
             <p>Créez des recettes adaptées à vos préférences et vos besoins alimentaires. Nous générons des suggestions personnalisées pour chaque utilisateur.</p>
         </div>
-        <div class="features">
+        <div class="features1">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">📝</span>
                 <h3><strong>Suivi des repas</strong></h3>
             </div>
             <p>Consultez l'historique de vos repas consommés et suivez vos habitudes alimentaires au fil du temps.</p>
         </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    # Fonctionnalités 3 et 4
+    st.markdown("""
         <div class="features">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">🛒</span>
@@ -168,7 +180,7 @@ with col1:
             </div>
             <p>Générez automatiquement des listes de courses basées sur les recettes que vous avez choisies. Ne manquez plus d'ingrédients !</p>
         </div>
-        <div class="features">
+        <div class="features1">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">🍴</span>
                 <h3><strong>Suggestions de repas</strong></h3>
@@ -176,10 +188,6 @@ with col1:
             <p>Obtenez des suggestions de repas en fonction de vos goûts et de vos besoins nutritionnels.</p>
         </div>
     """, unsafe_allow_html=True)
-
-with col2:
-    if os.path.exists(logo_path):
-        st.image(logo_path, use_container_width=True, caption=None) 
 
 # Présentation des membres de l'équipe
 st.markdown("<hr>", unsafe_allow_html=True)  # Ajoute une ligne de séparation
