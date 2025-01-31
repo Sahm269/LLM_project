@@ -21,12 +21,6 @@ def sign_in(navigate_to):
             animation: fadeIn 1s ease-in;
         }
 
-
-
-
-
-
-
         .stTextInput > div > div > input {
             font-size: 16px;
             border-radius: 8px;
@@ -43,7 +37,6 @@ def sign_in(navigate_to):
             cursor: pointer;
             transition: 0.3s;
         }
-
         
         .stButton > button:hover {
             background-color: #388E3C;
@@ -62,27 +55,23 @@ def sign_in(navigate_to):
 
     logo_path = "assets/logo.png"
 
-    # Créez trois colonnes et placez l'image dans la colonne du centre
-    col1, col2, col3 = st.columns([1.5, 1.5, 1])  # La colonne centrale aura une largeur plus grande
+    #centrer le logo
+    col1, col2, col3 = st.columns([1.5, 1.5, 1])
 
     with col2:
         if os.path.exists(logo_path):
-            st.image(logo_path, width=150)  # Ajustez la largeur selon la taille de votre logo
+            st.image(logo_path, width=150)
 
     # Récupération du gestionnaire de base de données (déjà stocké en session)
     db_manager = st.session_state.get("db_manager")
 
-    # Titre de la page de connexion
     st.title("Connexion")
 
     # Champs de connexion
-    login = st.text_input("👤 Pseudo")  # Champ pseudo
-    password = st.text_input("🔒 Mot de passe", type="password")  # Champ mot de passe
+    login = st.text_input("👤 Pseudo")
+    password = st.text_input("🔒 Mot de passe", type="password")
 
-    # Lien vers l'inscription
-    if st.button("Pas de compte ? Inscrivez-vous.") :
-        navigate_to("inscription")  # Redirection vers l'inscription
-
+    """
     # Bouton de connexion
     if st.button("Se connecter"):
         # Vérification des identifiants en base de données
@@ -100,9 +89,49 @@ def sign_in(navigate_to):
                 st.session_state["user_id"] = user_id
 
                 # Message de confirmation
-                st.success("✅ Connexion réussie ! Redirection en cours...")
+                st.success("✅ Connexion réussie !")
                 navigate_to("accueil")  # Redirige vers la page d'accueil
             else:
-                st.error("❌ Mot de passe incorrect.")  # Message d'erreur si mauvais mot de passe
+                st.error("❌ Mot de passe incorrect.")
         else:
-            st.error("❌ Utilisateur non trouvé.")  # Message d'erreur si login inexistant
+            st.error("❌ Utilisateur non trouvé.")
+
+    # Lien vers l'inscription
+    if st.button("Pas de compte ? Inscrivez-vous.") :
+        navigate_to("inscription")  # Redirection vers l'inscription
+
+"""
+
+# Forcer la connexion pendant le développement (commenter cette partie si nécessaire)
+    if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+        # Simuler une connexion (utiliser des valeurs par défaut)
+        st.session_state["logged_in"] = True
+        st.session_state["user"] = "dev_user"
+        st.session_state["user_id"] = 1  # ID fictif pour le développement
+        st.success("✅ Connexion simulée pour le développement !")
+        navigate_to("accueil")  # Redirige vers la page d'accueil
+    else:
+        # Logique de connexion normale (en production)
+        login = st.text_input("👤 Pseudo")
+        password = st.text_input("🔒 Mot de passe", type="password")
+
+        if st.button("Se connecter"):
+            user = db_manager.fetch_by_condition("utilisateurs", "login = %s", (login,))
+
+            if user:
+                user_id = user[0][0]
+                hashed_password = user[0][2]
+
+                if check_password_hash(hashed_password, password):
+                    st.session_state["logged_in"] = True
+                    st.session_state["user"] = login
+                    st.session_state["user_id"] = user_id
+                    st.success("✅ Connexion réussie !")
+                    navigate_to("accueil")
+                else:
+                    st.error("❌ Mot de passe incorrect.")
+            else:
+                st.error("❌ Utilisateur non trouvé.")
+
+    if st.button("Pas de compte ? Inscrivez-vous."):
+        navigate_to("inscription")

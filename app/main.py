@@ -3,6 +3,7 @@ import sys
 import os
 from dotenv import load_dotenv
 
+
 # Ajouter les chemins des modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'page')))
 from sign_in import sign_in
@@ -13,7 +14,7 @@ from dbmanager import DBManager
 
 # Charger les variables d'environnement
 load_dotenv()
-st.set_page_config(page_title="Nutrigénie")
+st.set_page_config(page_title="Nutrigénie", layout="wide")
 
 # Configuration de la base de données
 db_config = {
@@ -69,14 +70,42 @@ def handle_navigation():
 
 # Définition des pages disponibles
 PAGES = {
-    "accueil": {"file": "page/accueil.py", "title": "Accueil"},
-    "chatbot": {"file": "page/chatbot.py", "title": "Chat Bot"},
-    "dashboard": {"file": "page/dashboard.py", "title": "Tableau de Bord"},
-    "user": {"file": "page/user.py", "title": lambda: f"Mon Compte {st.session_state.get('user', '')}"}
+    "accueil": {"file": "page/accueil.py", "title": "🏠 Accueil"},
+    "chatbot": {"file": "page/chatbot.py", "title": "🤖 Chat Bot"},
+    "dashboard": {"file": "page/dashboard.py", "title": "📊 Tableau de Bord"},
+    "user": {"file": "page/user.py", "title": lambda: f"👤 Mon Compte {st.session_state.get('user', '')}"}
 }
 
 # Fonction principale
 def main():
+
+    st.markdown(
+            """
+            <style>
+
+
+            .stButton > button {
+                background-color: #4CAF50;
+                color: white;
+                font-size: 18px;
+                padding: 10px;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                transition: 0.3s;
+            }
+            
+            .stButton > button:hover {
+                background-color: #388E3C;
+                box-shadow: 0px 0px 1px 1px;
+                color: white;
+            }
+
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
     # Gestion de la navigation
     handle_navigation()
 
