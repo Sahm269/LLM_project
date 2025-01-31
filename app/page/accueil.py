@@ -3,10 +3,10 @@ import os
 
 st.markdown("""
     <style>
-     
+        /*
         body, .stApp {
             background: linear-gradient(to right, #cae7d4, #a8d8b9);
-        }
+        }*/
 
         @keyframes gradientAnimation {
             0% { background-position: 0% 50%; }
@@ -65,7 +65,7 @@ st.markdown("""
         }
 
         .features {
-            background-color: #e2f4f1;
+            background: linear-gradient(to right, #cae7d4, #a8d8b9);
             padding: 1.5rem;
             border-radius: 8px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
@@ -73,17 +73,6 @@ st.markdown("""
             transition: transform 0.3s ease;
             margin-bottom: 1rem;
             height:250px;
-        }
-            
-        .features1 {
-            background-color: #e2f4f1;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 1s ease-out;
-            transition: transform 0.3s ease;
-            margin-bottom: 1rem;
-            height:200px;
         }
 
         .features:hover {
@@ -156,7 +145,7 @@ with col1:
             </div>
             <p>Créez des recettes adaptées à vos préférences et vos besoins alimentaires. Nous générons des suggestions personnalisées pour chaque utilisateur.</p>
         </div>
-        <div class="features1">
+        <div class="features">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">📝</span>
                 <h3><strong>Suivi des repas</strong></h3>
@@ -175,7 +164,7 @@ with col2:
             </div>
             <p>Générez automatiquement des listes de courses basées sur les recettes que vous avez choisies. Ne manquez plus d'ingrédients !</p>
         </div>
-        <div class="features1">
+        <div class="features">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">🍴</span>
                 <h3><strong>Suggestions de repas</strong></h3>
