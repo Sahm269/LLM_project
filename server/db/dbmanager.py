@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 from psycopg2 import extras
-import datetime
+from datetime import datetime
 import logging
 import json
 import pandas as pd
@@ -17,10 +17,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 # Configuration de la base de données
 db_config = {
-    "host": st.secrets["DB_HOST"],
     "database": st.secrets["DB_NAME"],
     "user": st.secrets["DB_USER"],
     "password": st.secrets["DB_PASSWORD"],
+    "host": st.secrets["DB_HOST"],
+    "port": st.secrets["DB_PORT"]
 }
 
 ######################### CLASSES #########################
@@ -56,7 +57,7 @@ class DBManager:
     def _connect_to_database(self):
         """Établit une connexion avec la base PostgreSQL."""
         try:
-            self.connection = psycopg2.connect(**self.db_config, cursor_factory=extras.DictCursor)
+            self.connection = psycopg2.connect(**self.db_config, cursor_factory=extras.RealDictCursor)
             self.cursor = self.connection.cursor()
         except psycopg2.Error as err:
             logger.error(f"Erreur de connexion : {err}")
@@ -288,6 +289,7 @@ def create_conversation(db_manager, title: str, id_utilisateur: int) -> int:
     }]
     try:
         result = db_manager.insert_data_from_dict("conversations", data, id_column="id_conversation")
+        logger.warning(type(result))
         return result[0]
     except psycopg2.Error as err:
         logger.error(f"Error while connecting to database: {err}")

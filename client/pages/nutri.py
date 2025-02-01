@@ -4,9 +4,8 @@ import time
 from server.mistral.mistralapi import MistralAPI
 from server.security.prompt_guard import Guardrail
 import asyncio
-from dotenv import load_dotenv
 from typing import List, Dict
-from projects.LLM_project.server.db.db import (
+from server.db.dbmanager import (
     load_conversations,
     load_messages, 
     update_conversation,
@@ -117,7 +116,7 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
 
 # Initialisation de Mistral
-    mistral = MistralAPI(model=st.session_state["mistral_model"])
+mistral = MistralAPI(model=st.session_state["mistral_model"])
 
 if prompt := st.chat_input("Dîtes quelque-chose"):
     retries = 0
