@@ -99,7 +99,7 @@ class DBManager:
         # Requête pour insérer les données et retourner l'ID dynamique
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) RETURNING {id_column}"  
         
-        ids = []  # Liste pour stocker les IDs retournés
+        ids = [] 
         try:
             for row in data:
                 self.cursor.execute(query, tuple(row.values()))
@@ -112,7 +112,27 @@ class DBManager:
         finally:
             self.connection.commit()
 
+    def insert_data_from_dict(self, table_name: str, data: List[Dict], id_column: str) -> List[int]:
+        """Insère des données dans une table à partir d'une liste de dictionnaires et retourne les IDs insérés.
         
+        table_name : str : nom de la table
+        data : List[Dict] : données à insérer
+        id_column : str : nom de la colonne d'ID à retourner
+        """
+        columns = ", ".join(data[0].keys())
+        placeholders = ", ".join(['%s' for _ in data[0].keys()])
+        
+        # Requête pour insérer les données et retourner l'ID dynamique
+        query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) RETURNING {id_column}"  
+        
+        ids = []  # Liste pour stocker les IDs retournés
+        for row in data:
+            self.cursor.execute(query, tuple(row.values()))
+            inserted_id = self.cursor.fetchone()[0]  # Récupère le premier (et unique) élément de la ligne retournée
+            ids.append(inserted_id)
+        
+        self.connection.commit()
+        return ids
 
 
 
@@ -313,7 +333,7 @@ def load_messages(db_manager, id_conversation: int) -> List[Dict]:
     """
     try:
         result = db_manager.query(query, (id_conversation,))
-        return [{"role": row[0], "content": row[1]} for row in result]
+        return [{"role": row["role"], "content": row["content"]} for row in result]
     except psycopg2.Error as err:
         logger.error(f"Error while connecting to database: {err}")
         return
@@ -333,7 +353,7 @@ def load_conversations(db_manager, id_utilisateur: int) -> List[Dict]:
     """
     try:
         result = db_manager.query(query, (id_utilisateur,))
-        print("Résultat de la requête SQL :", result)
+       
 
         return [
             {"id_conversation": row["id_conversation"], "created_at": row["created_at"], "title": row["title"]} for row in result

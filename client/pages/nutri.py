@@ -34,6 +34,9 @@ st.markdown(
             font-size: 25px;
         }
 
+        .stbutton > button  {
+        background:#D8BFD8;}
+
        
     </style>
     """,

@@ -9,10 +9,6 @@ def sign_in(navigate_to):
         """
         <style>
 
-        body, .stApp {
-            background: linear-gradient(to right, #cae7d4, #a8d8b9);
-        } 
-
         @keyframes fadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
@@ -24,11 +20,11 @@ def sign_in(navigate_to):
         .stTextInput > div > div > input {
             font-size: 16px;
             border-radius: 8px;
-            border: 1px solid #4CAF50;
+            border: 1px solid #6A5ACD;
         }
 
         .stButton > button {
-            background-color: #4CAF50;
+            background-color: #6A5ACD;
             color: white;
             font-size: 18px;
             padding: 10px;
@@ -38,10 +34,7 @@ def sign_in(navigate_to):
             transition: 0.3s;
         }
         
-        .stButton > button:hover {
-            background-color: #388E3C;
-            box-shadow: 0px 0px 4px 4px rgba(132, 200, 156, 0.7);
-        }
+       
 
         .stAlert {
             text-align: center;
