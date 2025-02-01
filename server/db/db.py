@@ -1,158 +1,103 @@
 import streamlit as st
-import sqlite3
-from mistralai import Mistral
+import psycopg2
 from datetime import datetime
 import logging
-import platform
-from dotenv import load_dotenv
-import os
+from typing import List, Dict
+import pandas as pd
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
-if platform.system() == "Windows":
-    # Specify the path to your .env file
-    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
-    # Load the .env file
-    load_dotenv(dotenv_path)
-else:
-    load_dotenv()
 
 
-
-
-# Establish PostgreSQL connection
-# try:
-#     db = psycopg2.connect(
-#         host=os.environ.get("POSTGRES_HOST"),
-#         user=os.environ.get("POSTGRES_USER"),
-#         password=os.environ.get("POSTGRES_PASSWORD"),
-#         dbname=os.environ.get("POSTGRES_DBNAME"),
-#         port=os.environ.get("POSTGRES_PORT")
-#     )
-# except psycopg2.OperationalError as err:
-#     logger.error(f"Operational error: {err}")
-# except psycopg2.Error as err:
-#     logger.error(f"Database connection error: {err}")
-
-
-
-# Configuration de la base de données SQLite
-DB_NAME = "chat_history.db"
-conn = sqlite3.connect(DB_NAME, check_same_thread=False)
-# Initialisation du client Mistral
-# api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
-# api_key = os.environ.get("MISTRAL_API_KEY")
-# mistral_client = Mistral(api_key=api_key)
-
-def get_cursor():
-    """
-    Validate and obtain a cursor for database operations.
-
-    Returns:
-        cursor: A database cursor.
-    """
+# Fonction pour obtenir la connexion à la base de données
+def get_db_connection():
     try:
-        return conn.cursor()
-    except sqlite3.Error as err:
-        logger.error(f"Error obtaining cursor: {err}")
+        conn = psycopg2.connect(
+            host=st.secrets["DB_HOST"],
+            # port=os.getenv("DB_PORT"),
+            dbname=st.secrets["DB_NAME"],
+            user=st.secrets["DB_USER"],
+            password=st.secrets["DB_PASSWORD"]
+        )
+        return conn
+    except Exception as e:
+        logger.error(f"Erreur de connexion à la base de données: {e}")
         return None
-    
 
-def init_db():
-    cursor = get_cursor()
+# Connexion à la base de données pour récupérer le nombre total de recettes
+def get_recipes_count():
+    conn = get_db_connection()
+    if conn is None:
+        return 0
     try:
-        cursor.execute('''
-                CREATE TABLE IF NOT EXISTS conversations (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    created_at TEXT NOT NULL,
-                    title TEXT NOT NULL
-                )
-            ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                conversation_id INTEGER NOT NULL,
-                role TEXT NOT NULL,
-                content TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
-                FOREIGN KEY (conversation_id) REFERENCES conversations (id)
-            )
-        ''')
-        return
-    except sqlite3.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
-        return
-        raise HTTPException(status_code=500, detail=str(err))
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM recettes")
+        result = cursor.fetchone()
+        return result[0]  # Le nombre total de recettes
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération du nombre de recettes : {e}")
+        return 0
     finally:
-        conn.commit()
-        # conn.close()
+        cursor.close()
+        conn.close()
 
-
-def save_message(conversation_id, role, content):
-    cursor = get_cursor()
+# Fonction pour récupérer la latence moyenne des messages
+def get_average_latency():
+    conn = get_db_connection()
+    if conn is None:
+        return 0.0
     try:
-        timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        cursor.execute("INSERT INTO messages (conversation_id, role, content, timestamp) VALUES (?, ?, ?, ?)",
-                (conversation_id, role, content, timestamp))
-    except sqlite3.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
-        return
-        raise HTTPException(status_code=500, detail=str(err))
+        cursor = conn.cursor()
+        cursor.execute("SELECT AVG(temps_traitement) FROM messages WHERE temps_traitement IS NOT NULL")
+        result = cursor.fetchone()
+        return round(result[0], 2) if result[0] is not None else 0.0
+    except Exception as e:
+        logger.error(f"Erreur de connexion à la base de données pour la latence : {e}")
+        return 0.0
     finally:
-        conn.commit()
-        # conn.close()
+        cursor.close()
+        conn.close()
 
-def create_conversation(title):
-    cursor = get_cursor()
+# Fonction pour récupérer le nombre de requêtes par jour
+def get_daily_requests():
+    conn = get_db_connection()
+    if conn is None:
+        return pd.DataFrame()
     try:
-        created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("INSERT INTO conversations (created_at, title) VALUES (?, ?)", (created_at, title))
-        conversation_id = cursor.lastrowid
-        return conversation_id
-    except sqlite3.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
-        raise Exception(status_code=500, detail=str(err))
+        query = """
+        SELECT
+            DATE(timestamp) AS date,
+            COUNT(*) AS nombre_requetes
+        FROM
+            messages
+        GROUP BY
+            date
+        ORDER BY
+            date;
+        """
+        df = pd.read_sql(query, conn)
+        return df
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des requêtes par jour : {e}")
+        return pd.DataFrame()
     finally:
-        conn.commit()
-        # conn.close()
-    
+        conn.close()
 
-def load_messages(conversation_id):
-    cursor = get_cursor()
-    try:
-        cursor.execute("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC", (conversation_id,))
-        data = [{"role": row[0], "content": row[1]} for row in cursor.fetchall()]
-        return data
-    except sqlite3.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
-        raise Exception(status_code=500, detail=str(err))
-    finally:
-        conn.commit()
-        # conn.close()
 
-def load_conversations():
-    cursor = get_cursor()
+# Fonction pour récupérer les ingrédients depuis la base de données
+def get_ingredients():
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        cursor.execute("SELECT * FROM conversations ORDER BY created_at DESC") 
-        data = cursor.fetchall()
-        return data
-    except sqlite3.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
-        raise Exception(status_code=500, detail=str(err))
+        cursor.execute("SELECT ingredients FROM liste_courses")
+        ingredients_list = cursor.fetchall()  # Récupère tous les résultats
+        return ingredients_list
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des requêtes par jour : {e}")
+        return pd.DataFrame()
     finally:
-        conn.commit()
-        # conn.close()
-
-def update_conversation(conversation_id):
-    cursor = get_cursor()
-    try:
-        new_timer = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("UPDATE conversations SET created_at = ? WHERE id = ?",(new_timer, conversation_id))
-    except sqlite3.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
-        raise Exception(status_code=500, detail=str(err))
-    finally:
-        conn.commit()
-        # conn.close()
+        # Fermer la connexion
+        cursor.close()
+        conn.close()

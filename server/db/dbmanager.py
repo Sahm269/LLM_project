@@ -1,12 +1,29 @@
+import streamlit as st
 import psycopg2
 from psycopg2 import extras
+import datetime
+import logging
 import json
 import pandas as pd
 from typing import List, Dict, Tuple
 import os
 import sys 
 
+# Configuration du logging
+logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler()])
+logger = logging.getLogger(__name__)
+
 sys.stdout.reconfigure(encoding='utf-8')
+
+# Configuration de la base de données
+db_config = {
+    "host": st.secrets["DB_HOST"],
+    "database": st.secrets["DB_NAME"],
+    "user": st.secrets["DB_USER"],
+    "password": st.secrets["DB_PASSWORD"],
+}
+
+######################### CLASSES #########################
 
 class DBManager:
     def __init__(self, db_config: Dict, schema_file: str):
@@ -41,15 +58,21 @@ class DBManager:
         try:
             self.connection = psycopg2.connect(**self.db_config, cursor_factory=extras.DictCursor)
             self.cursor = self.connection.cursor()
-        except Exception as e:
-            raise ConnectionError(f"Erreur de connexion : {e}")
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
 
     def _create_database(self):
         """Crée les tables définies dans le schéma JSON."""
         for table_name, table_info in self.schema['tables'].items():
             create_table_query = self._generate_create_table_query(table_name, table_info['columns'])
-            self.cursor.execute(create_table_query)
-        self.connection.commit()
+            try:
+                self.cursor.execute(create_table_query)
+            except psycopg2.Error as err:
+                logger.error(f"Erreur de connexion : {err}")
+                return
+            finally:
+                self.connection.commit()
 
     def _generate_create_table_query(self, table_name: str, columns: List[Dict]) -> str:
         """Génère une requête SQL pour créer une table en fonction du schéma."""
@@ -76,13 +99,17 @@ class DBManager:
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) RETURNING {id_column}"  
         
         ids = []  # Liste pour stocker les IDs retournés
-        for row in data:
-            self.cursor.execute(query, tuple(row.values()))
-            inserted_id = self.cursor.fetchone()[0]  # Récupère le premier (et unique) élément de la ligne retournée
-            ids.append(inserted_id)
-        
-        self.connection.commit()
-        return ids
+        try:
+            for row in data:
+                self.cursor.execute(query, tuple(row.values()))
+                inserted_id = self.cursor.fetchone()[0]  # Récupère le premier (et unique) élément de la ligne retournée
+                ids.append(inserted_id)
+            return ids
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
+        finally:
+            self.connection.commit()
 
 
 
@@ -93,14 +120,23 @@ class DBManager:
         placeholders = ", ".join(['%s' for _ in columns])
         query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
         
-        for row in df.itertuples(index=False, name=None):
-            self.cursor.execute(query, row)
-        self.connection.commit()
+        try:
+            for row in df.itertuples(index=False, name=None):
+                self.cursor.execute(query, row)
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
+        finally:
+            self.connection.commit()
 
     def fetch_all(self, table_name: str) -> List[Tuple]:
         """Récupère toutes les données d'une table."""
-        self.cursor.execute(f"SELECT * FROM {table_name}")
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(f"SELECT * FROM {table_name}")
+            return self.cursor.fetchall()
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
     
     
     def execute_safe(self, query: str, params: Tuple = (), fetch: bool = False):
@@ -118,7 +154,8 @@ class DBManager:
                 return self.cursor.fetchall()  # Retourner les résultats si demandé
             else:
                 self.connection.commit()  # Valider les modifications
-        except Exception as e:
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
             self.connection.rollback()  # Annuler la transaction en cas d'erreur
             raise RuntimeError(f"Erreur SQL : {e} | Query : {query} | Params : {params}")
 
@@ -126,21 +163,35 @@ class DBManager:
     def fetch_by_condition(self, table_name: str, condition: str, params: Tuple = ()) -> List[Tuple]:
         """Récupère les données d'une table avec une condition."""
         query = f"SELECT * FROM {table_name} WHERE {condition}"
-        self.cursor.execute(query, params)
-        return self.execute_safe(query, params, fetch=True)
+        try:
+            self.cursor.execute(query, params)
+            return self.execute_safe(query, params, fetch=True)
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
    
 
     def update_data(self, table_name: str, set_clause: str, condition: str, params: Tuple) -> None:
         """Met à jour des données dans une table."""
         query = f"UPDATE {table_name} SET {set_clause} WHERE {condition}"
-        self.cursor.execute(query, params)
-        self.connection.commit()
+        try:
+            self.cursor.execute(query, params)
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
+        finally:
+            self.connection.commit()
 
     def delete_data(self, table_name: str, condition: str, params: Tuple) -> None:
         """Supprime des données d'une table selon une condition."""
         query = f"DELETE FROM {table_name} WHERE {condition}"
-        self.cursor.execute(query, params)
-        self.connection.commit()
+        try:
+            self.cursor.execute(query, params)
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
+        finally:
+            self.connection.commit()
 
     def close_connection(self) -> None:
         """Ferme la connexion à la base de données."""
@@ -151,27 +202,195 @@ class DBManager:
     def create_index(self, table_name: str, column_name: str) -> None:
         """Crée un index sur une colonne spécifique pour améliorer les performances de recherche."""
         query = f"CREATE INDEX IF NOT EXISTS idx_{table_name}_{column_name} ON {table_name} ({column_name})"
-        self.cursor.execute(query)
-        self.connection.commit()
+        try:
+            self.cursor.execute(query)
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
+        finally:
+            self.connection.commit()
 
     def select(self, query: str, params: Tuple = ()) -> List[Tuple]:
         """Exécute une requête SELECT personnalisée et retourne les résultats."""
-        self.cursor.execute(query, params)
-        return self.cursor.fetchall()
-
-
-
+        try:
+            self.cursor.execute(query, params)
+            return self.cursor.fetchall()
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
     
     def query(self, query, params=None):
         """
         Exécute une requête SQL, en utilisant les paramètres fournis, 
         et retourne les résultats si nécessaire.
         """
-        self.cursor.execute(query, params)
+        try:
+            self.cursor.execute(query, params)
+        except psycopg2.Error as err:
+            logger.error(f"Erreur de connexion : {err}")
+            return
+        finally:
+            # Si la requête est un SELECT, récupérer les résultats
+            if query.strip().upper().startswith("SELECT"):
+                return self.cursor.fetchall()
+            else: # Si ce n'est pas un SELECT, ne rien retourner (utile pour INSERT/UPDATE)
+                self.connection.commit()
+                return None  
         
-        # Si la requête est un SELECT, récupérer les résultats
-        if query.strip().upper().startswith("SELECT"):
-            return self.cursor.fetchall()
-        
-        # Si ce n'est pas un SELECT, ne rien retourner (utile pour INSERT/UPDATE)
-        return None  
+
+
+    
+
+######################### FONCTIONS #########################
+
+# Mettre DBManager en cache
+@st.cache_resource
+def get_db_manager():
+    return DBManager(db_config, os.path.join("server","db","schema.json"))
+
+
+def save_message(db_manager, id_conversation: int, role: str, content: str) -> None:
+    """
+    Sauvegarde un message dans la base de données, en associant l'utilisateur à la conversation.
+    
+    :param db_manager: Instance de DBManager.
+    :param id_conversation: ID de la conversation associée.
+    :param role: Rôle de l'intervenant (ex. 'user' ou 'assistant').
+    :param content: Contenu du message.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data = [{
+        "id_conversation": id_conversation,
+        "role": role,
+        "content": content,
+        "timestamp": timestamp,
+    }]
+    try:
+        db_manager.insert_data_from_dict("messages", data, id_column="id_message")
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return    
+
+def create_conversation(db_manager, title: str, id_utilisateur: int) -> int:
+    """
+    Crée une nouvelle conversation dans la base de données, en associant l'utilisateur à la conversation.
+    
+    :param db_manager: Instance de DBManager.
+    :param title: Titre de la conversation.
+    :param id_utilisateur: ID de l'utilisateur associé.
+    :return: ID de la conversation nouvellement créée.
+    """
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data = [{
+        "created_at": created_at,
+        "title": title,
+        "id_utilisateur": id_utilisateur,
+    }]
+    try:
+        result = db_manager.insert_data_from_dict("conversations", data, id_column="id_conversation")
+        return result[0]
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return
+
+def load_messages(db_manager, id_conversation: int) -> List[Dict]:
+    """
+    Charge les messages associés à une conversation.
+    
+    :param db_manager: Instance de DBManager.
+    :param id_conversation: ID de la conversation.
+    :return: Liste des messages sous forme de dictionnaires.
+    """
+    query = """
+        SELECT role, content 
+        FROM messages 
+        WHERE id_conversation = %s 
+        ORDER BY timestamp ASC
+    """
+    try:
+        result = db_manager.query(query, (id_conversation,))
+        return [{"role": row[0], "content": row[1]} for row in result]
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return
+
+def load_conversations(db_manager, id_utilisateur: int) -> List[Dict]:
+    """
+    Charge toutes les conversations enregistrées pour un utilisateur donné.
+    
+    :param db_manager: Instance de DBManager.
+    :param id_utilisateur: ID de l'utilisateur.
+    :return: Liste des conversations.
+    """
+    query = """
+        SELECT * FROM conversations 
+        WHERE id_utilisateur = %s
+        ORDER BY created_at DESC
+    """
+    try:
+        result = db_manager.query(query, (id_utilisateur,))
+        return [
+            {"id_conversation": row[0], "created_at": row[1], "title": row[2]} for row in result
+        ]
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return
+
+def update_conversation(db_manager, id_conversation: int, id_utilisateur: int) -> None:
+    """
+    Met à jour le champ `created_at` d'une conversation donnée pour un utilisateur.
+    
+    :param db_manager: Instance de DBManager.
+    :param id_conversation: ID de la conversation à mettre à jour.
+    :param id_utilisateur: ID de l'utilisateur.
+    """
+    new_timer = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = """
+        UPDATE conversations 
+        SET created_at = %s 
+        WHERE id_conversation = %s AND id_utilisateur = %s
+    """
+    try:
+        db_manager.query(query, (new_timer, id_conversation, id_utilisateur))
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return
+
+def update_conversation_title(db_manager, id_conversation: int, new_title: str) -> None:
+    """
+    Met à jour le titre d'une conversation si celui-ci est encore "Nouvelle conversation".
+
+    :param db_manager: Instance de DBManager.
+    :param id_conversation: ID de la conversation à mettre à jour.
+    :param new_title: Nouveau titre de la conversation.
+    """
+    query = """
+        UPDATE conversations 
+        SET title = %s
+        WHERE id_conversation = %s AND title = 'Nouvelle conversation'
+    """
+    try:
+        db_manager.query(query, (new_title, id_conversation))
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return
+
+def get_conversation_title(db_manager, id_conversation: int) -> str:
+    """
+    Récupère le titre d'une conversation spécifique en utilisant `fetch_by_condition`.
+
+    :param db_manager: Instance de DBManager.
+    :param id_conversation: ID de la conversation à interroger.
+    :return: Le titre de la conversation ou "Nouvelle conversation".
+    """
+    table_name = "conversations"
+    condition = "id_conversation = %s"
+    try:
+        results = db_manager.fetch_by_condition(table_name, condition, (id_conversation,))
+        if results:
+            # Suppose que `title` est la troisième colonne
+            return results[0][2]
+        return "Nouvelle conversation"
+    except psycopg2.Error as err:
+        logger.error(f"Error while connecting to database: {err}")
+        return

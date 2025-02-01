@@ -1,13 +1,8 @@
 import streamlit as st
-import sys
-import os
-
-# Charger dynamiquement les fichiers Python associés aux onglets
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'page')))
-from info_perso import info_perso
-from mealplan import mealplan
-from course_list import course_list
-from favoris import favoris
+from client.pages.user__info_perso import info_perso
+from client.pages.user__mealplan import mealplan
+from client.pages.user__course_list import course_list
+from client.pages.user__favoris import favoris
 
 
 # Appliquer le style personnalisé aux headers

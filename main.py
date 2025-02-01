@@ -1,16 +1,13 @@
 # data_link = https://github.com/Sahm269/LLM_project/tree/souraya/data
 import streamlit as st
-from streamlit_option_menu import option_menu
-from client.pages.home import home_page
-from client.pages.nutri import nutri_page
-from client.pages.dashboard import dashboard_page
-from client.pages.about import about_page
+# from streamlit_option_menu import option_menu
+# from client.pages.home import home_page
+# from projects.LLM_project.client.pages.nutri_old import nutri_page
+# from client.pages.dashboard import dashboard_page
+# from client.pages.about import about_page
 from client.pages.sign_in import sign_in
 from client.pages.sign_up import sign_up
-from server.db.dbmanager import DBManager
-import sys
-import os
-from dotenv import load_dotenv
+from server.db.dbmanager import get_db_manager
 
 APP_TITLE = "Nutrigénie"
 
@@ -21,54 +18,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-with st.sidebar:
-    st.image("client/assets/avatar_bot_medium.jpg")
+# with st.sidebar:
+#     st.image("client/assets/avatar_bot_medium.jpg")
 
-    selected = option_menu(
-        menu_title='',
-        options=["Accueil", "Nutrigénie", "Tableau de bord", "A propos"],
-        icons=["house", "patch-question", "bar-chart", "info-circle"],
-        default_index=0,
-        # orientation="horizontal",
-    )
+#     selected = option_menu(
+#         menu_title='',
+#         options=["Accueil", "Nutrigénie", "Tableau de bord", "A propos"],
+#         icons=["house", "patch-question", "bar-chart", "info-circle"],
+#         default_index=0,
+#         # orientation="horizontal",
+#     )
 
-if selected == "Accueil":
-    home_page()
-elif selected == "Nutrigénie":
-    nutri_page()
-elif selected == "Tableau de bord":
-    dashboard_page()
-elif selected == "A propos":
-    about_page()
-
-
-
-
-
-
-
-
-
-#################################
-# Charger les variables d'environnement
-# load_dotenv()
-# st.set_page_config(page_title="Nutrigénie", layout="wide")
-
-# Configuration de la base de données
-db_config = {
-    "host": st.secrets["DB_HOST"],
-    "database": st.secrets["DB_NAME"],
-    "user": st.secrets["DB_USER"],
-    "password": st.secrets["DB_PASSWORD"],
-}
-
-
-###################
-
-# Mettre DBManager en cache
-@st.cache_resource
-def get_db_manager():
-    return DBManager(db_config, "../data/schema.json")
+# if selected == "Accueil":
+#     home_page()
+# elif selected == "Nutrigénie":
+#     nutri_page()
+# elif selected == "Tableau de bord":
+#     dashboard_page()
+# elif selected == "A propos":
+#     about_page()
 
 # Initialiser DBManager dans st.session_state si non défini
 if "db_manager" not in st.session_state:
@@ -111,10 +79,10 @@ def handle_navigation():
 
 # Définition des pages disponibles
 PAGES = {
-    "accueil": {"file": "page/accueil.py", "title": "🏠 Accueil"},
-    "chatbot": {"file": "page/chatbot.py", "title": "🤖 Chat Bot"},
-    "dashboard": {"file": "page/dashboard.py", "title": "📊 Tableau de Bord"},
-    "user": {"file": "page/user.py", "title": lambda: f"👤 Mon Compte {st.session_state.get('user', '')}"}
+    "accueil": {"file": "client/pages/home.py", "title": "🏠 Accueil"},
+    "chatbot": {"file": "client/pages/nutri.py", "title": "🤖 Chat Bot"},
+    "dashboard": {"file": "client/pages/dashboard.py", "title": "📊 Tableau de Bord"},
+    "user": {"file": "client/pages/user.py", "title": lambda: f"👤 Mon Compte {st.session_state.get('user', '')}"}
 }
 
 # Fonction principale

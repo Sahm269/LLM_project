@@ -12,6 +12,7 @@ def info_perso():
         query = f"SELECT * FROM utilisateurs WHERE id_utilisateur = {user_id}"
         user_info = db_manager.query(query)
         
+        
         if not user_info:
             st.error("Utilisateur non trouvé.")
         else:

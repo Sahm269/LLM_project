@@ -2,7 +2,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from client.pages.home import home_page
-from client.pages.nutri import nutri_page
+from projects.LLM_project.client.pages.nutri_old import nutri_page
 from client.pages.dashboard import dashboard_page
 from client.pages.about import about_page
 from client.pages.sign_in import sign_in
@@ -51,15 +51,15 @@ elif selected == "A propos":
 
 #################################
 # Charger les variables d'environnement
-load_dotenv()
+# load_dotenv()
 # st.set_page_config(page_title="Nutrigénie", layout="wide")
 
 # Configuration de la base de données
 db_config = {
-    "host": os.getenv("DB_HOST"),
-    "database": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
+    "host": st.secrets["DB_HOST"],
+    "database": st.secrets["DB_NAME"],
+    "user": st.secrets["DB_USER"],
+    "password": st.secrets["DB_PASSWORD"],
 }
 
 
