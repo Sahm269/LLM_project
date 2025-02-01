@@ -16,7 +16,7 @@ def get_db_connection():
     try:
         conn = psycopg2.connect(
             host=st.secrets["DB_HOST"],
-            # port=os.getenv("DB_PORT"),
+            port=st.secrets["DB_PORT"],
             dbname=st.secrets["DB_NAME"],
             user=st.secrets["DB_USER"],
             password=st.secrets["DB_PASSWORD"]

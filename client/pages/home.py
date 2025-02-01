@@ -115,7 +115,7 @@ st.markdown("""
     <br>
 """, unsafe_allow_html=True)
 
-logo_path = "assets/logo.png"
+logo_path = os.path.join("client","assets","logo.png")
 
 # centrer le logo
 cola, colb, colc = st.columns(3)
@@ -181,7 +181,7 @@ st.markdown("<hr>", unsafe_allow_html=True)  # Ajoute une ligne de séparation
 st.subheader("Rencontrez notre équipe 👩‍🍳👨‍🍳")
 
 # Définition des 5 membres
-base_path = os.path.join("..","assets")
+base_path = os.path.join("client","assets")
 membres = [
     {"nom": "Souraya", "role": "Chef de projet", "photo": f"{os.path.join(base_path,'membre1.jpg')}", "emoji_role": "👩‍💻"},
     {"nom": "Bertrand", "role": "Développeur Backend", "photo": f"{os.path.join(base_path,'membre2.jpg')}", "emoji_role": "💻"},
