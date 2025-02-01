@@ -59,7 +59,7 @@ def info_perso():
                 objectif_calorique = st.text_input("Objectif calorique", user_info["objectif_calorique"])
 
             # Bouton pour sauvegarder toutes les informations
-            if st.button("Mettre à jour tout"):
+            if st.button("Tout mettre à jour"):
                 table_name = "utilisateurs"
                 
                 # Correction de la chaîne set_clause (ajout du guillemet manquant)
