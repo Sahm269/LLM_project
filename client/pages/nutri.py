@@ -200,6 +200,7 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                     # Gestion explicite de l'erreur 429 (Rate Limit Exceeded)
                     retries += 1
                     wait_time = 2 ** retries  # Délai exponentiel : 2, 4, 8 secondes
+                    stream_response = None
                     st.warning(f"Limite de requêtes atteinte (429). Nouvel essai dans {wait_time} secondes...")
                     time.sleep(wait_time)
                 else:

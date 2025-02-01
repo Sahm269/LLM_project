@@ -57,7 +57,7 @@ class DBManager:
     def _connect_to_database(self):
         """Établit une connexion avec la base PostgreSQL."""
         try:
-            self.connection = psycopg2.connect(**self.db_config, cursor_factory=extras.RealDictCursor)
+            self.connection = psycopg2.connect(**self.db_config, cursor_factory=extras.DictCursor)
             self.cursor = self.connection.cursor()
         except psycopg2.Error as err:
             logger.error(f"Erreur de connexion : {err}")
@@ -291,7 +291,7 @@ def save_message(db_manager, id_conversation: int, role: str, content: str) -> N
     try:
         db_manager.insert_data_from_dict("messages", data, id_column="id_message")
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion: {err}")
         return    
 
 def create_conversation(db_manager, title: str, id_utilisateur: int) -> int:
@@ -311,10 +311,9 @@ def create_conversation(db_manager, title: str, id_utilisateur: int) -> int:
     }]
     try:
         result = db_manager.insert_data_from_dict("conversations", data, id_column="id_conversation")
-        logger.warning(type(result))
         return result[0]
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion : {err}")
         return
 
 def load_messages(db_manager, id_conversation: int) -> List[Dict]:
@@ -335,7 +334,7 @@ def load_messages(db_manager, id_conversation: int) -> List[Dict]:
         result = db_manager.query(query, (id_conversation,))
         return [{"role": row["role"], "content": row["content"]} for row in result]
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion : {err}")
         return
 
 def load_conversations(db_manager, id_utilisateur: int) -> List[Dict]:
@@ -359,7 +358,7 @@ def load_conversations(db_manager, id_utilisateur: int) -> List[Dict]:
             {"id_conversation": row["id_conversation"], "created_at": row["created_at"], "title": row["title"]} for row in result
         ]
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion : {err}")
         return
 
 def update_conversation(db_manager, id_conversation: int, id_utilisateur: int) -> None:
@@ -379,7 +378,7 @@ def update_conversation(db_manager, id_conversation: int, id_utilisateur: int) -
     try:
         db_manager.query(query, (new_timer, id_conversation, id_utilisateur))
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion : {err}")
         return
 
 def update_conversation_title(db_manager, id_conversation: int, new_title: str) -> None:
@@ -398,7 +397,7 @@ def update_conversation_title(db_manager, id_conversation: int, new_title: str) 
     try:
         db_manager.query(query, (new_title, id_conversation))
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion : {err}")
         return
 
 def get_conversation_title(db_manager, id_conversation: int) -> str:
@@ -418,5 +417,5 @@ def get_conversation_title(db_manager, id_conversation: int) -> str:
             return results[0][2]
         return "Nouvelle conversation"
     except psycopg2.Error as err:
-        logger.error(f"Error while connecting to database: {err}")
+        logger.error(f"Erreur de connexion : {err}")
         return
