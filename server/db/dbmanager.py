@@ -103,7 +103,7 @@ class DBManager:
         try:
             for row in data:
                 self.cursor.execute(query, tuple(row.values()))
-                inserted_id = self.cursor.fetchone()[0]  # Récupère le premier (et unique) élément de la ligne retournée
+                inserted_id = self.cursor.fetchone()[0]  
                 ids.append(inserted_id)
             return ids
         except psycopg2.Error as err:
@@ -111,6 +111,8 @@ class DBManager:
             return
         finally:
             self.connection.commit()
+
+        
 
 
 
@@ -331,8 +333,10 @@ def load_conversations(db_manager, id_utilisateur: int) -> List[Dict]:
     """
     try:
         result = db_manager.query(query, (id_utilisateur,))
+        print("Résultat de la requête SQL :", result)
+
         return [
-            {"id_conversation": row[0], "created_at": row[1], "title": row[2]} for row in result
+            {"id_conversation": row["id_conversation"], "created_at": row["created_at"], "title": row["title"]} for row in result
         ]
     except psycopg2.Error as err:
         logger.error(f"Error while connecting to database: {err}")

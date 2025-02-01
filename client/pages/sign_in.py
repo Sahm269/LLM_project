@@ -71,15 +71,17 @@ def sign_in(navigate_to):
     login = st.text_input("👤 Pseudo")
     password = st.text_input("🔒 Mot de passe", type="password")
 
-    """
+    
     # Bouton de connexion
     if st.button("Se connecter"):
         # Vérification des identifiants en base de données
         user = db_manager.fetch_by_condition("utilisateurs", "login = %s", (login,))
+        print("user",user)
 
         if user:
-            user_id = user[0][0]  # Récupération de l'ID utilisateur
-            hashed_password = user[0][2]  # Récupération du mot de passe hashé
+            user = user[0]
+            user_id = user["id_utilisateur"] # Récupération de l'ID utilisateur
+            hashed_password = user["mot_de_passe"]  # Récupération du mot de passe hashé
 
             # Vérification du mot de passe
             if check_password_hash(hashed_password, password):
@@ -100,8 +102,8 @@ def sign_in(navigate_to):
     if st.button("Pas de compte ? Inscrivez-vous.") :
         navigate_to("inscription")  # Redirection vers l'inscription
 
-"""
 
+"""
 # Forcer la connexion pendant le développement (commenter cette partie si nécessaire)
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         # Simuler une connexion (utiliser des valeurs par défaut)
@@ -135,3 +137,4 @@ def sign_in(navigate_to):
 
     if st.button("Pas de compte ? Inscrivez-vous."):
         navigate_to("inscription")
+        """
