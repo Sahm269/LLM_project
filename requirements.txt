@@ -1,3 +1,7 @@
 streamlit
 pysqlite3-wheels
 mistralai
+requests
+python-dotenv
+psycopg2-binary
+streamlit_option_menu

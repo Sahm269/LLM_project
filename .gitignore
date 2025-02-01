@@ -1,0 +1,23 @@
+# Fichiers et dossiers spécifiques à Streamlit
+.streamlit/secrets.toml
+
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+
+# Environnements virtuels
+venv/
+env/
+.env
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de logs
+*.log
+
+# Fichiers de distribution
+dist/
+build/
+*.egg-info/
