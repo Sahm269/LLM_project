@@ -17,7 +17,7 @@ from server.db.dbmanager import (
     delete_conversation  
 )
 
-# 🔹 Chargement des variables de session
+# 🔹 Chargement des variables de session pour éviter les rechargements inutiles
 if "id_conversation" not in st.session_state:
     st.session_state.id_conversation = None
 
@@ -25,7 +25,7 @@ if "mistral_model" not in st.session_state:
     st.session_state["mistral_model"] = "mistral-large-latest"
 
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = []  # Initialise l'historique des messages
 
 # 🔹 Initialisation unique de MistralAPI
 if "mistral_instance" not in st.session_state:
@@ -33,7 +33,7 @@ if "mistral_instance" not in st.session_state:
     st.session_state.mistral_instance = MistralAPI(model=st.session_state["mistral_model"])
     print("✅ MistralAPI initialisé avec succès.")
 
-mistral = st.session_state.mistral_instance
+mistral = st.session_state.mistral_instance  # Récupérer l'instance stockée
 
 # 🔹 Initialisation de la sécurité (Guardrail)
 try:
@@ -49,7 +49,8 @@ user_id = st.session_state["user_id"]
 # 🔹 Sidebar : Bouton "➕ Nouveau chat" en haut
 st.sidebar.title("🗂️ Historique")
 if st.sidebar.button("➕ Nouveau chat"):
-    new_conversation_id = create_conversation(db_manager, "Nouvelle conversation", user_id)
+    title = "Nouvelle conversation"
+    new_conversation_id = create_conversation(db_manager, title, user_id)
     st.session_state.id_conversation = new_conversation_id
     st.session_state.messages = []  
     st.rerun()
@@ -61,17 +62,9 @@ conversation_history = load_conversations(db_manager, user_id) or []
 for index, conversation in enumerate(conversation_history):
     id_conversation = conversation['id_conversation']
     title = conversation['title']
+    key = f"conversation_{id_conversation}_{index}"  # Clé unique
 
-    # Si la conversation est encore "Nouvelle conversation", générer un titre avec `auto_wrap`
-    if title == "Nouvelle conversation":
-        messages = load_messages(db_manager, id_conversation)
-        if messages:
-            title = mistral.auto_wrap(messages[0]["content"])  # Générer un titre
-            update_conversation_title(db_manager, id_conversation, title)  # Mettre à jour dans la BDD
-
-    key = f"conversation_{id_conversation}_{index}"
-
-    col1, col2 = st.sidebar.columns([0.8, 0.2])
+    col1, col2 = st.sidebar.columns([0.8, 0.2])  # 🔹 Disposition pour aligner le bouton de suppression
 
     with col1:
         if "id_conversation" in st.session_state and st.session_state.id_conversation == id_conversation:
@@ -84,11 +77,11 @@ for index, conversation in enumerate(conversation_history):
                 st.rerun()
 
     with col2:
-        if st.button("🗑️", key=f"delete_{id_conversation}"):
+        if st.button("🗑️", key=f"delete_{id_conversation}"):  # 🔥 Bouton de suppression
             delete_conversation(db_manager, id_conversation)
-            st.rerun()
+            st.rerun()  # Rafraîchir après suppression
 
-# 🔹 Affichage des messages précédents
+# 🔹 Affichage des messages précédents dans l'interface
 for message in st.session_state.messages:
     timestamp = message["timestamp"]
     latency = message["temps_traitement"]
@@ -111,7 +104,7 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     # 🔸 Vérifier la sécurité du message
     is_safe = guardrail.analyze_query(prompt)
 
-    # 🔸 Afficher immédiatement le message utilisateur
+    # 🔸 Afficher immédiatement le message de l'utilisateur
     with st.chat_message("user"):
         st.markdown(prompt)
 
@@ -130,16 +123,10 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     st.session_state.messages.append({"role": "user", "content": prompt,  "temps_traitement":None, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
     save_message(db_manager, st.session_state.id_conversation, role="user", content=prompt, temps_traitement=None)
 
-    # 🔹 Générer un titre si c'est le premier message de la conversation
-    current_title = get_conversation_title(db_manager, st.session_state.id_conversation)
-    if current_title == "Nouvelle conversation":
-        title = mistral.auto_wrap(prompt)  # Utiliser Mistral pour générer un titre
-        update_conversation_title(db_manager, st.session_state.id_conversation, title)
-
     # 🔸 Si le message est interdit, afficher l'alerte mais NE PAS l'envoyer à Mistral
     if not is_safe:
         st.warning("⚠️ Votre message ne respecte pas nos consignes.")
-        st.stop()
+        st.stop()  # Arrêter l'exécution ici pour ne PAS envoyer à Mistral
 
     retries = 0
     max_retries = 3
