@@ -40,7 +40,7 @@ def mealplan():
     st.subheader(f"📆 Planning des repas - {selected_week_label} ({selected_year})")
     df = pd.DataFrame.from_dict({date: st.session_state["meal_plan"][date] for date in week_dates}, orient="index")
     df.index = pd.to_datetime(df.index).strftime("%A %d %B")  # Affichage clair des jours
-    st.dataframe(df)
+    st.dataframe(df, use_container_width=True)
 
     # ✅ **Message de validation persistant**
     if "validation_msg" in st.session_state:
