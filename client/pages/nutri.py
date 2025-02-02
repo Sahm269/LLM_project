@@ -34,8 +34,9 @@ st.markdown(
             font-size: 25px;
         }
 
-        .stbutton > button  {
-        background:#D8BFD8;}
+        .stButton > button  {
+        background:linear-gradient(to top, #cae7d4, #a7d7b8);
+        }
 
        
     </style>
@@ -64,6 +65,20 @@ user_id = st.session_state["user_id"]
 conversation_history = load_conversations(db_manager,user_id)
 
 st.sidebar.title("Historique")
+
+# Ajouter un bouton pour démarrer une nouvelle conversation
+if st.sidebar.button("➕ Nouveau chat"):
+    # Créer une nouvelle conversation
+    title = "Nouvelle conversation"
+    new_conversation_id = create_conversation(db_manager, title, user_id)
+
+    # Initialiser la session avec cette nouvelle conversation
+    st.session_state.id_conversation = new_conversation_id
+    st.session_state.messages = []  # Réinitialiser les messages
+
+    # Redémarrer l'application pour afficher la nouvelle conversation
+    st.rerun()
+
 for index, conversation in enumerate(conversation_history):
     id_conversation = conversation['id_conversation']
     title = conversation['title']
@@ -82,18 +97,6 @@ for index, conversation in enumerate(conversation_history):
             update_conversation(db_manager,id_conversation=st.session_state.id_conversation,id_utilisateur=user_id)
             st.rerun()
             
-# Ajouter un bouton pour démarrer une nouvelle conversation
-if st.sidebar.button("➕ Nouveau chat"):
-    # Créer une nouvelle conversation
-    title = "Nouvelle conversation"
-    new_conversation_id = create_conversation(db_manager, title, user_id)
-
-    # Initialiser la session avec cette nouvelle conversation
-    st.session_state.id_conversation = new_conversation_id
-    st.session_state.messages = []  # Réinitialiser les messages
-
-    # Redémarrer l'application pour afficher la nouvelle conversation
-    st.rerun()
 
 
 # Historique de la conversation

@@ -180,7 +180,7 @@ class DBManager:
         except psycopg2.Error as err:
             logger.error(f"Erreur de connexion : {err}")
             self.connection.rollback()  # Annuler la transaction en cas d'erreur
-            raise RuntimeError(f"Erreur SQL : {e} | Query : {query} | Params : {params}")
+            raise RuntimeError(f"Erreur SQL : {err} | Query : {query} | Params : {params}")
 
 
     def fetch_by_condition(self, table_name: str, condition: str, params: Tuple = ()) -> List[Tuple]:
