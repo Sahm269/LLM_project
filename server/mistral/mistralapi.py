@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import pandas as pd
+import tiktoken 
 
 # class MistralAPI:
 #     """
@@ -295,4 +296,27 @@ class MistralAPI:
 
         return title
 
+    def count_tokens(self, text: str) -> int:
+        """
+        Compte le nombre de tokens dans un texte donné.
+        Utilise tiktoken pour compter les tokens de l'entrée et de la sortie.
+        """
+        encoder = tiktoken.get_encoding("cl100k_base") 
+        tokens = encoder.encode(text)
+        return len(tokens)
+
+    def count_input_tokens(self, messages: list) -> int:
+        """
+        Calcule le nombre total de tokens pour tous les messages dans la conversation.
+        """
+        total_tokens = 0
+        for message in messages:
+            total_tokens += self.count_tokens(message['content'])  # Ajoute les tokens du message
+        return total_tokens
+
+    def count_output_tokens(self, response: str) -> int:
+        """
+        Calcule le nombre de tokens dans la réponse générée par Mistral.
+        """
+        return self.count_tokens(response)  # Utilise la même méthode de comptage des tokens
 

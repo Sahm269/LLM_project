@@ -58,7 +58,9 @@
         {"name": "content", "type": "TEXT", "constraints": ["NOT NULL"]},
         {"name": "timestamp", "type": "TIMESTAMP", "constraints": ["DEFAULT CURRENT_TIMESTAMP"]},
         {"name": "temps_traitement", "type": "REAL", "constraints": []},
-        {"name": "contexte", "type": "TEXT", "constraints": []}
+        {"name": "contexte", "type": "TEXT", "constraints": []},
+        {"name": "total_cout", "type": "REAL", "constraints": []},
+        {"name": "impact_eco", "type": "REAL", "constraints": []}
       ]
     },
     "liste_courses": {

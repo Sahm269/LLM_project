@@ -272,7 +272,7 @@ def get_db_manager():
     return DBManager(db_config, os.path.join("server","db","schema.json"))
 
 
-def save_message(db_manager, id_conversation: int, role: str, content: str,temps_traitement) -> None:
+def save_message(db_manager, id_conversation: int, role: str, content: str,temps_traitement, total_cout, impact_eco) -> None:
     """
     Sauvegarde un message dans la base de données, en associant l'utilisateur à la conversation.
     
@@ -288,6 +288,8 @@ def save_message(db_manager, id_conversation: int, role: str, content: str,temps
         "content": content,
         "timestamp": timestamp,
         "temps_traitement":temps_traitement,
+        "total_cout": total_cout,
+        "impact_eco": impact_eco
     }]
     try:
         db_manager.insert_data_from_dict("messages", data, id_column="id_message")

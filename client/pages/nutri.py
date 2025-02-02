@@ -17,6 +17,7 @@ from server.db.dbmanager import (
     delete_conversation  
 )
 
+
 # 🔹 Chargement des variables de session pour éviter les rechargements inutiles
 if "id_conversation" not in st.session_state:
     st.session_state.id_conversation = None
@@ -101,6 +102,10 @@ for message in st.session_state.messages:
 # 🔹 Interface utilisateur - Zone d'entrée utilisateur
 if prompt := st.chat_input("Dîtes quelque-chose"):
 
+    # Calcul du nombre de tokens avant d'envoyer le prompt
+    input_tokens = mistral.count_input_tokens([{"content": prompt}])
+    print(f"✅ Nombre de tokens en entrée : {input_tokens}")
+
     # 🔸 Vérifier la sécurité du message
     is_safe = guardrail.analyze_query(prompt)
 
@@ -120,8 +125,8 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
             update_conversation_title(db_manager, st.session_state.id_conversation, new_title)
 
     # 🔸 Ajouter le message à l'historique et l'enregistrer dans la base de données
-    st.session_state.messages.append({"role": "user", "content": prompt,  "temps_traitement":None, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-    save_message(db_manager, st.session_state.id_conversation, role="user", content=prompt, temps_traitement=None)
+    st.session_state.messages.append({"role": "user", "content": prompt,  "temps_traitement":None, "total_cout":None, "impact_eco":None, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    save_message(db_manager, st.session_state.id_conversation, role="user", content=prompt, temps_traitement=None, total_cout=None, impact_eco=None)
 
     # 🔸 Si le message est interdit, afficher l'alerte mais NE PAS l'envoyer à Mistral
     if not is_safe:
@@ -144,15 +149,22 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                 print("🔄 Génération de réponse en cours...")
                 stream_response = mistral.stream(st.session_state.messages, temperature=0.5)
 
+                # Compteur pour les tokens de sortie
+                output_tokens = 0
+
                 for chunk in stream_response:
                     response += chunk.data.choices[0].delta.content
                     response_placeholder.markdown(response)
+                    # Calculer les tokens pour ce morceau de réponse
+                    output_tokens += mistral.count_output_tokens(chunk.data.choices[0].delta.content)
+                
                     time.sleep(0.03)
 
                 end_time = time.time()  # 🔹 Fin du chronomètre
                 latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
 
                 print(f"✅ Réponse générée en {latency} secondes.")
+                print(f"✅ Nombre de tokens de sortie : {output_tokens}")
             except Exception as e:
                 if hasattr(e, "status_code") and e.status_code == 429:
                     retries += 1
@@ -172,6 +184,28 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
             st.error("❌ Impossible d'obtenir une réponse après plusieurs tentatives.")
             response = "❌ Erreur : Limite de requêtes atteinte."
 
+        # 🔹 Calcul du coût des tokens d'entrée et de sortie
+        input_cost_per_token = 0.0004  # Coût par token d'entrée
+        output_cost_per_token = 0.0005  # Coût par token de sortie
+
+        # Calcul du coût des tokens d'entrée et de sortie
+        input_cost = input_tokens * input_cost_per_token
+        output_cost = output_tokens * output_cost_per_token
+
+        # Calcul du coût total
+        total_cost = input_cost + output_cost
+        print(f"✅ Coût total de la requête : {total_cost} USD")
+
+        # Facteur d'émission (en grammes de CO₂ par token)
+        EMISSIONS_PER_TOKEN = 0.00005 # estimation
+
+        # Calcul de l'empreinte carbone pour les tokens d'entrée et de sortie
+        input_emissions = input_tokens * EMISSIONS_PER_TOKEN
+        output_emissions = output_tokens * EMISSIONS_PER_TOKEN
+        total_emissions = input_emissions + output_emissions
+        print(f"🌍 Impact écologique total de la requête : {total_emissions:.4f} g CO₂")
+                
+
         # 🔹 Enregistrer la réponse de l'assistant
         st.session_state.messages.append({"role": "assistant", "content": response, "temps_traitement":latency, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-        save_message(db_manager, st.session_state.id_conversation, role="assistant", content=response, temps_traitement=latency)
+        save_message(db_manager, st.session_state.id_conversation, role="assistant", content=response, temps_traitement=latency, total_cout=total_cost, impact_eco=total_emissions)
