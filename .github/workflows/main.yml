@@ -21,9 +21,8 @@ jobs:
       - name: Install Git LFS
         run: |
           git lfs install
-          git lfs track "server/security/data/guardrail_dataset_train_multi.json"
-          git lfs track "envLLM/Lib/site-packages/numpy.libs/libscipy_openblas64_*.dll"
-          git lfs track "envLLM/Lib/site-packages/pyarrow/arrow.dll"
+          git lfs track "*.json"
+          git lfs track "*.dll"
           git add .gitattributes
           git commit -m "Configure Git LFS"
 
