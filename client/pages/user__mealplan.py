@@ -81,20 +81,30 @@ def mealplan():
     # 🤖 Ajout des suggestions du chatbot
     st.subheader("🤖 Suggestions du Chatbot")
 
+    # Initialiser la liste des suggestions si elle n'existe pas encore
     if "chatbot_suggestions" not in st.session_state:
         st.session_state["chatbot_suggestions"] = []
 
+    # Vérifier si des suggestions existent
     if st.session_state["chatbot_suggestions"]:
         with st.form("chatbot_form"):
-            selected_recipe = st.selectbox("🔍 Sélectionnez une recette", st.session_state["chatbot_suggestions"])
+            # Sélection multiple des recettes proposées par le chatbot
+            selected_recipes = st.multiselect("🔍 Sélectionnez les recettes à ajouter", st.session_state["chatbot_suggestions"])
+
+            # Sélection du jour et du repas
             selected_day_for_recipe = st.selectbox("📅 Assigner à quel jour ?", week_dates)
             selected_meal_for_recipe = st.selectbox("🍽️ Assigner à quel repas ?", ["Petit-déjeuner", "Déjeuner", "Dîner"])
 
-            add_recipe = st.form_submit_button("➕ Ajouter la recette au planning")
-            if add_recipe:
-                st.session_state["meal_plan"][selected_day_for_recipe][selected_meal_for_recipe] += f"\n- {selected_recipe}"
-                st.session_state["validation_msg"] = f"✅ Recette ajoutée à {selected_meal_for_recipe} ({selected_day_for_recipe}) avec succès !"
-                st.rerun()
+            # Bouton pour ajouter les recettes au planning
+            add_recipes = st.form_submit_button("➕ Ajouter les recettes sélectionnées")
+
+            if add_recipes and selected_recipes:
+                for recipe in selected_recipes:
+                    st.session_state["meal_plan"][selected_day_for_recipe][selected_meal_for_recipe] += f"\n- {recipe}"
+
+                # Message de confirmation
+                st.session_state["validation_msg"] = f"✅ {len(selected_recipes)} recettes ajoutées à {selected_meal_for_recipe} ({selected_day_for_recipe}) avec succès !"
+                st.rerun()  # Rafraîchir pour afficher les mises à jour immédiatement
     else:
         st.write("⚠️ Aucune suggestion du chatbot pour le moment.")
 

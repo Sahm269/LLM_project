@@ -151,28 +151,31 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                 
                 # 🔹 Vérifier si la réponse contient une suggestion de recette
                 
-                # 🔹 Vérifier si la réponse contient une suggestion de recette
+                # 🔹 Vérifier si la réponse contient des suggestions de recettes
                 keywords = ["recette", "plat", "préparer", "ingrédients"]
 
                 for word in keywords:
-                    if word in response.lower():  # Si un mot clé est détecté
-                        # 🔹 Demander à Mistral de générer un résumé court
+                    if word in response.lower():
                         try:
-                            summarized_title = mistral.extract_recipe_title(text=response, temperature=0.3)  # Appel API Mistral
+                            # 🔹 Extraire plusieurs titres de recettes
+                            suggested_recipes = mistral.extract_multiple_recipes(text=response, temperature=0.3)
 
                             # Vérifier et initialiser la liste des suggestions
                             if "chatbot_suggestions" not in st.session_state:
                                 st.session_state["chatbot_suggestions"] = []
 
-                            # Ajouter uniquement le titre résumé si ce n'est pas un doublon
-                            if summarized_title and summarized_title not in st.session_state["chatbot_suggestions"]:
-                                st.session_state["chatbot_suggestions"].append(summarized_title)
-                                print(f"✅ Nouvelle suggestion ajoutée : {summarized_title}")
+                            # Ajouter uniquement les recettes qui ne sont pas déjà stockées
+                            new_recipes = [recipe for recipe in suggested_recipes if recipe not in st.session_state["chatbot_suggestions"]]
+                            
+                            if new_recipes:
+                                st.session_state["chatbot_suggestions"].extend(new_recipes)  # Ajouter plusieurs recettes
+                                print(f"✅ {len(new_recipes)} nouvelles suggestions ajoutées.")
 
                         except Exception as e:
-                            print(f"❌ Erreur lors du résumé de la suggestion : {e}")
+                            print(f"❌ Erreur lors de l'extraction des suggestions : {e}")
 
                         break  # On ne veut ajouter qu'une seule suggestion par réponse
+
 
 
 
