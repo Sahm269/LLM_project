@@ -16,7 +16,9 @@ jobs:
       - name: Install Git LFS
         run: |
           git lfs install
-          git lfs track "*.your-file-extension" # Remplacez par les extensions à suivre
+          git lfs track "server/security/data/guardrail_dataset_train_multi.json"
+          git lfs track "envLLM/Lib/site-packages/numpy.libs/libscipy_openblas64_*.dll"
+          git lfs track "envLLM/Lib/site-packages/pyarrow/arrow.dll"
           git add .gitattributes
           git commit -m "Configure Git LFS"
       - name: Push to hub
