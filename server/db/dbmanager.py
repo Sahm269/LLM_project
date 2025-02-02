@@ -419,3 +419,23 @@ def get_conversation_title(db_manager, id_conversation: int) -> str:
     except psycopg2.Error as err:
         logger.error(f"Erreur de connexion : {err}")
         return
+
+def delete_conversation(db_manager, id_conversation: int) -> None:
+    """
+    Supprime une conversation et ses messages associés de la base de données.
+
+    :param db_manager: Instance de DBManager.
+    :param id_conversation: ID de la conversation à supprimer.
+    """
+    try:
+        # Supprimer les messages liés à la conversation
+        query_delete_messages = "DELETE FROM messages WHERE id_conversation = %s"
+        db_manager.query(query_delete_messages, (id_conversation,))
+
+        # Supprimer la conversation elle-même
+        query_delete_conversation = "DELETE FROM conversations WHERE id_conversation = %s"
+        db_manager.query(query_delete_conversation, (id_conversation,))
+
+        print(f"✅ Conversation {id_conversation} supprimée avec succès.")
+    except Exception as e:
+        print(f"❌ Erreur lors de la suppression de la conversation {id_conversation}: {e}")
