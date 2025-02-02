@@ -25,8 +25,7 @@ def info_perso():
                 nom = st.text_input("Nom", user_info["login"])
             with col2:
                 email = st.text_input("Email", user_info["email"])
-            with col3:
-                mot_de_passe = st.text_input("Mot de passe", value="********", type="password")
+            
 
             # Deuxième formulaire (Objectifs nutritionnels, Poids, Taille)
             col1, col2, col3 = st.columns(3)
@@ -62,14 +61,13 @@ def info_perso():
             if st.button("Tout mettre à jour"):
                 table_name = "utilisateurs"
                 
-                # Correction de la chaîne set_clause (ajout du guillemet manquant)
-                set_clause = """login = %s, email = %s, mot_de_passe = %s, 
-                                objectifs_nutritionnels = %s, poids = %s, taille = %s,
+                
+                set_clause = """login = %s, email = %s, objectifs_nutritionnels = %s, poids = %s, taille = %s,
                                 regime_particulier = %s, activite_physique = %s, objectif_calorique = %s"""
                 condition = "id_utilisateur = %s"
 
                 # Rassembler les paramètres à passer à la méthode
-                params = (nom, email, mot_de_passe, objectifs_nutritionnels, poids, taille, 
+                params = (nom, email, objectifs_nutritionnels, poids, taille, 
                         regime_particulier, activite_physique, objectif_calorique, user_id)
                 
                 # Appel à la méthode update_data avec les bons paramètres

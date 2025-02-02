@@ -5,6 +5,7 @@ from server.mistral.mistralapi import MistralAPI
 from server.security.prompt_guard import Guardrail
 import asyncio
 from typing import List, Dict
+from datetime import datetime
 from server.db.dbmanager import (
     load_conversations,
     load_messages, 
@@ -82,8 +83,8 @@ for index, conversation in enumerate(conversation_history):
 
 # 🔹 Affichage des messages précédents dans l'interface
 for message in st.session_state.messages:
-    timestamp = message.get("timestamp", "Non spécifié")
-    latency = message.get("temps_traitement", None)
+    timestamp = message["timestamp"]
+    latency = message["temps_traitement"]
     latency_text = f"⏳ {latency} sec" if latency is not None else ""
 
     if message["role"] == "user":
@@ -107,8 +108,19 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    if st.session_state.id_conversation is None:
+        # Générer un titre basé sur le premier message
+        title = mistral.auto_wrap(text=prompt, temperature=0.5)
+        st.session_state.id_conversation = create_conversation(db_manager, title, user_id)
+    else:
+        # Vérifier si le titre est encore "Nouvelle conversation" et le mettre à jour si nécessaire
+        current_title = get_conversation_title(db_manager, st.session_state.id_conversation)
+        if current_title == "Nouvelle conversation":
+            new_title = mistral.auto_wrap(text=prompt, temperature=0.5)
+            update_conversation_title(db_manager, st.session_state.id_conversation, new_title)
+
     # 🔸 Ajouter le message à l'historique et l'enregistrer dans la base de données
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": prompt,  "temps_traitement":None, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
     save_message(db_manager, st.session_state.id_conversation, role="user", content=prompt, temps_traitement=None)
 
     # 🔸 Si le message est interdit, afficher l'alerte mais NE PAS l'envoyer à Mistral
@@ -161,5 +173,5 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
             response = "❌ Erreur : Limite de requêtes atteinte."
 
         # 🔹 Enregistrer la réponse de l'assistant
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.messages.append({"role": "assistant", "content": response, "temps_traitement":latency, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
         save_message(db_manager, st.session_state.id_conversation, role="assistant", content=response, temps_traitement=latency)

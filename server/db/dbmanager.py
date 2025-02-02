@@ -272,7 +272,7 @@ def get_db_manager():
     return DBManager(db_config, os.path.join("server","db","schema.json"))
 
 
-def save_message(db_manager, id_conversation: int, role: str, content: str) -> None:
+def save_message(db_manager, id_conversation: int, role: str, content: str,temps_traitement) -> None:
     """
     Sauvegarde un message dans la base de données, en associant l'utilisateur à la conversation.
     
@@ -287,6 +287,7 @@ def save_message(db_manager, id_conversation: int, role: str, content: str) -> N
         "role": role,
         "content": content,
         "timestamp": timestamp,
+        "temps_traitement":temps_traitement,
     }]
     try:
         db_manager.insert_data_from_dict("messages", data, id_column="id_message")
@@ -325,14 +326,14 @@ def load_messages(db_manager, id_conversation: int) -> List[Dict]:
     :return: Liste des messages sous forme de dictionnaires.
     """
     query = """
-        SELECT role, content 
+        SELECT *
         FROM messages 
         WHERE id_conversation = %s 
         ORDER BY timestamp ASC
     """
     try:
         result = db_manager.query(query, (id_conversation,))
-        return [{"role": row["role"], "content": row["content"]} for row in result]
+        return [{"role": row["role"], "content": row["content"], "timestamp":row["timestamp"], "temps_traitement":row["temps_traitement"]} for row in result]
     except psycopg2.Error as err:
         logger.error(f"Erreur de connexion : {err}")
         return
