@@ -440,3 +440,35 @@ def delete_conversation(db_manager, id_conversation: int) -> None:
         print(f"✅ Conversation {id_conversation} supprimée avec succès.")
     except Exception as e:
         print(f"❌ Erreur lors de la suppression de la conversation {id_conversation}: {e}")
+
+def load_chatbot_suggestions(db_manager, user_id):
+    """
+    Charge les suggestions du chatbot enregistrées pour un utilisateur donné.
+    """
+    query = "SELECT repas_suggestion FROM suggestions_repas WHERE id_utilisateur = %s"
+    try:
+        db_manager.cursor.execute(query, (user_id,))
+        suggestions = [row[0] for row in db_manager.cursor.fetchall()]
+        return suggestions
+    except psycopg2.Error as err:
+        logger.error(f"Erreur lors du chargement des suggestions : {err}")
+        return []
+
+
+
+def save_chatbot_suggestions(db_manager, user_id, suggestions):
+    """
+    Sauvegarde les suggestions du chatbot dans la base de données.
+    """
+    query = """
+    INSERT INTO suggestions_repas (id_utilisateur, repas_suggestion, motif_suggestion) 
+    VALUES (%s, %s, %s)
+    """
+    try:
+        for suggestion in suggestions:
+            db_manager.cursor.execute(query, (user_id, suggestion, "Chatbot"))
+        db_manager.connection.commit()
+    except psycopg2.Error as err:
+        logger.error(f"Erreur lors de l'enregistrement des suggestions : {err}")
+
+

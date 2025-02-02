@@ -1,6 +1,13 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+from server.db.dbmanager import (
+    get_db_manager,
+    load_chatbot_suggestions
+)
+db_manager = get_db_manager()
+user_id = st.session_state["user_id"]
+
 
 def get_week_dates(year, week):
     """Retourne les dates du Lundi au Dimanche pour une semaine donnée."""
@@ -81,9 +88,10 @@ def mealplan():
     # 🤖 Ajout des suggestions du chatbot
     st.subheader("🤖 Suggestions du Chatbot")
 
-    # Initialiser la liste des suggestions si elle n'existe pas encore
+    # 🔹 Charger les suggestions enregistrées si elles ne sont pas déjà en mémoire
     if "chatbot_suggestions" not in st.session_state:
-        st.session_state["chatbot_suggestions"] = []
+        st.session_state["chatbot_suggestions"] = load_chatbot_suggestions(db_manager, user_id)
+
 
     # Vérifier si des suggestions existent
     if st.session_state["chatbot_suggestions"]:
