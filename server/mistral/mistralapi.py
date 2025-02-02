@@ -5,7 +5,6 @@ import pickle
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import pandas as pd
-from typing import List
 
 # class MistralAPI:
 #     """
@@ -295,52 +294,6 @@ class MistralAPI:
             title = title[:27] + "..."  # Tronquer proprement
 
         return title
-    
-    def extract_multiple_recipes(self, text: str, temperature: float = 0.3) -> List[str]:
-        """
-        Extrait plusieurs titres de recettes à partir d'un programme de repas.
-
-        Args:
-            text (str): La réponse contenant plusieurs suggestions de recettes.
-            temperature (float, optional): Contrôle la créativité du modèle. Défaut : 0.3.
-
-        Returns:
-            List[str]: Une liste contenant les titres des recettes extraites.
-        """
-        try:
-            chat_response = self.client.chat.complete(
-                model=self.model,
-                temperature=temperature,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Tu es un assistant qui extrait uniquement les titres des recettes d'un programme de repas. N'inclue pas le numéro des recettes. "
-                                "Retourne une liste de recettes, chaque titre sur une ligne séparée.",
-                    },
-                    {
-                        "role": "user",
-                        "content": text,
-                    },
-                ]
-            )
-
-            # 🔹 Afficher la réponse brute de Mistral pour voir ce qu'il retourne
-            print(f"🔍 Réponse brute du modèle :\n{chat_response.choices[0].message.content}")
-
-            # 🔹 Extraire la liste des recettes et la nettoyer
-            recipes = chat_response.choices[0].message.content.strip().split("\n")
-
-            # 🔹 Filtrer les titres vides ou incorrects
-            recipes = [recipe.strip() for recipe in recipes if len(recipe.strip()) > 3]
-
-            print(f"✅ Recettes extraites : {recipes}")  # 🔹 Vérification
-
-            return recipes
-
-        except Exception as e:
-            print(f"❌ Erreur lors de l'extraction des recettes : {e}")
-            return []
-
     
     def extract_recipe_title(self, text: str, temperature: float = 0.3) -> str:
         """
