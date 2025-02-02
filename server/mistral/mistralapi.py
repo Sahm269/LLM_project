@@ -216,7 +216,7 @@ class MistralAPI:
 
         return recipes
 
-    def get_contextual_response(self, messages: list, temperature: float = 0.5) -> str:
+    def get_contextual_response(self, messages: list, temperature: float = 0.2) -> str:
         """
         Récupère une réponse contextuelle en intégrant les données de ChromaDB si l'utilisateur demande une recette.
         """
@@ -246,6 +246,8 @@ class MistralAPI:
                 Objectifs de santé : Prends en compte les objectifs spécifiques de l'utilisateur (ex. : perte de poids, prise de masse musculaire, énergie durable, meilleure digestion).
                 Simples et accessibles : Propose des recettes ou des aliments faciles à préparer ou à trouver, en privilégiant des ingrédients frais et naturels.
                 Conseils bienveillants : Fournis des recommandations qui encouragent de bonnes habitudes alimentaires, sans culpabilisation.
+                
+                Tu ne dois parler que de nutrition et de sport en général. Ne réponds PAS à des questions qui s'éloignent de ces sujets. 
             """},
             {"role": "assistant", "content": context}
         ] + messages
@@ -267,7 +269,7 @@ class MistralAPI:
     
     def auto_wrap(self, text: str, temperature: float = 0.5) -> str:
         """
-        Génère un titre court basé sur la requête utilisateur.
+        Génère un titre court basé sur la requête utilisateur, limité à 30 caractères.
         """
         chat_response = self.client.chat.complete(
             model=self.model,
@@ -276,7 +278,7 @@ class MistralAPI:
                 {
                     "role": "system",
                     "content": "Résume le sujet de l'instruction ou de la question suivante en quelques mots. "
-                            "Ta réponse doit faire 30 caractères au maximum.",
+                            "Ta réponse doit être claire, concise et faire 30 caractères au maximum.",
                 },
                 {
                     "role": "user",
@@ -284,6 +286,13 @@ class MistralAPI:
                 },
             ]
         )
-        return chat_response.choices[0].message.content
+
+        title = chat_response.choices[0].message.content.strip()
+
+        # 🔹 Sécurité : Limiter le titre à 30 caractères et ajouter "..." si nécessaire
+        if len(title) > 30:
+            title = title[:27] + "..."  # Tronquer proprement
+
+        return title
 
 
