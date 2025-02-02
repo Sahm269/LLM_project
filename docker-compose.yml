@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: llmDBPostgres
+    image: postgres:latest
+    ports:
+        - "32001:5432"
+    environment:
+        POSTGRES_DB: llm
+        POSTGRES_USER: llm
+        POSTGRES_PASSWORD: llm
+    # volumes:
+    #   - ./sql/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+    #   - ./sql/set_restaurants.sql:/docker-entrypoint-initdb.d/02_set_restaurants.sql
+    #   - ./sql/set_locations.sql:/docker-entrypoint-initdb.d/03set_locations.sql
+    #   - ./sql/set_reviews.sql:/docker-entrypoint-initdb.d/04set_reviews.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+
+  client:
+    image: llm-client
+    build:
+      dockerfile: Dockerfile
+    container_name: llm-client
+    ports:
+      - "8502:8502"
+    environment:
+      DOCKER_ENV: true
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: llm
+      POSTGRES_PASSWORD: llm
+      POSTGRES_DBNAME: llm
+      POSTGRES_PORT: 5432
+      # SQLITE_PATH: path/to/tripadvisor.db
+      MISTRAL_URL: http://mistralservice:8501
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      # GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
