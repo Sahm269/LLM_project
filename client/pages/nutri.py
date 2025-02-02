@@ -14,7 +14,9 @@ from server.db.dbmanager import (
     save_message,
     get_conversation_title,
     update_conversation_title,
-    delete_conversation  
+    delete_conversation,
+    load_chatbot_suggestions,
+    save_chatbot_suggestions
 )
 
 
@@ -27,6 +29,9 @@ if "mistral_model" not in st.session_state:
 
 if "messages" not in st.session_state:
     st.session_state.messages = []  # Initialise l'historique des messages
+
+
+
 
 # 🔹 Initialisation unique de MistralAPI
 if "mistral_instance" not in st.session_state:
@@ -46,6 +51,9 @@ except Exception as e:
 # 🔹 Chargement de la base de données
 db_manager = st.session_state["db_manager"]
 user_id = st.session_state["user_id"]
+
+if "chatbot_suggestions" not in st.session_state:
+    st.session_state["chatbot_suggestions"] = load_chatbot_suggestions(db_manager, user_id)
 
 # 🔹 Sidebar : Bouton "➕ Nouveau chat" en haut
 st.sidebar.title("🗂️ Historique")
@@ -159,6 +167,38 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                     output_tokens += mistral.count_output_tokens(chunk.data.choices[0].delta.content)
                 
                     time.sleep(0.03)
+                
+                # 🔹 Vérifier si la réponse contient une suggestion de recette
+                
+                # 🔹 Vérifier si la réponse contient des suggestions de recettes
+                keywords = ["recette", "plat", "préparer", "ingrédients"]
+
+                for word in keywords:
+                    if word in response.lower():
+                        try:
+                            # 🔹 Extraire plusieurs titres de recettes
+                            suggested_recipes = mistral.extract_multiple_recipes(text=response, temperature=0.3)
+
+                            # Vérifier et initialiser la liste des suggestions
+                            if "chatbot_suggestions" not in st.session_state:
+                                st.session_state["chatbot_suggestions"] = []
+
+                            # Ajouter uniquement les recettes qui ne sont pas déjà stockées
+                            new_recipes = [recipe for recipe in suggested_recipes if recipe not in st.session_state["chatbot_suggestions"]]
+                            
+                            if new_recipes:
+                                st.session_state["chatbot_suggestions"].extend(new_recipes)  # Ajouter plusieurs recettes
+                                print(f"✅ {len(new_recipes)} nouvelles suggestions ajoutées.")
+                                
+                                # 🔹 Sauvegarder les suggestions dans la BDD
+                                save_chatbot_suggestions(db_manager, user_id, new_recipes)
+                        except Exception as e:
+                            print(f"❌ Erreur lors de l'extraction des suggestions : {e}")
+
+                        break  # On ne veut ajouter qu'une seule suggestion par réponse
+
+
+
 
                 end_time = time.time()  # 🔹 Fin du chronomètre
                 latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
