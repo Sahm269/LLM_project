@@ -101,3 +101,37 @@ def get_ingredients():
         # Fermer la connexion
         cursor.close()
         conn.close()
+
+# Fonction pour récupérer le coût total des requêtes
+def get_total_cost():
+    conn = get_db_connection()
+    if conn is None:
+        return 0.0
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT SUM(total_cout) FROM messages WHERE total_cout IS NOT NULL")
+        result = cursor.fetchone()
+        return round(result[0], 2) if result[0] is not None else 0.0
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération du coût total : {e}")
+        return 0.0
+    finally:
+        cursor.close()
+        conn.close()
+
+# Fonction pour récupérer l'impact écologique estimé
+def get_total_impact():
+    conn = get_db_connection()
+    if conn is None:
+        return 0.0
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT SUM(impact_eco) FROM messages WHERE impact_eco IS NOT NULL")
+        result = cursor.fetchone()
+        return round(result[0], 2) if result[0] is not None else 0.0
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération de l'impact écologique : {e}")
+        return 0.0
+    finally:
+        cursor.close()
+        conn.close()

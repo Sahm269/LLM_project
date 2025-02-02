@@ -7,12 +7,16 @@ from dotenv import load_dotenv
 from server.db.db import (
     get_recipes_count,
     get_average_latency,
-    get_daily_requests
+    get_daily_requests,
+    get_total_cost,
+    get_total_impact
 )
 
 # Récupérer les données pour afficher sur le dashboard
 total_recipes = get_recipes_count()
 average_latency = get_average_latency()
+total_cost = get_total_cost()
+total_impact = get_total_impact()
 
 # Récupérer les données des requêtes par jour
 df_requests = get_daily_requests()
@@ -52,6 +56,7 @@ st.markdown("""
             text-align: center;
             transition: transform 0.3s, box-shadow 0.3s;
             animation: fadeInUp 0.5s ease-out;
+            height: 200px;
         }
 
         .card:hover {
@@ -98,8 +103,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 # Créer des colonnes pour disposer les cards
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 # Card 1
 with col1:
@@ -112,27 +118,6 @@ with col1:
 
 # Card 2
 with col2:
-    st.markdown("""
-        <div class="card">
-            <div class="card-title">🍽️ Repas consommés</div>
-            <div class="card-value small">2450</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-# Card 3
-with col3:
-    st.markdown("""
-        <div class="card">
-            <div class="card-title">🥗 Recettes par type</div>
-            <div class="card-value">30%</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-# Créer une nouvelle ligne de cards
-col4, col5, col6 = st.columns(3)
-
-# Card 4
-with col4:
     st.markdown(f"""
         <div class="card">
             <div class="card-title">⏱️ Latence moyenne</div>
@@ -140,21 +125,21 @@ with col4:
         </div>
     """, unsafe_allow_html=True)
 
-# Card 5
-with col5:
-    st.markdown("""
+# Card 3
+with col3:
+    st.markdown(f"""
         <div class="card">
             <div class="card-title">💸 Coût total des requêtes</div>
-            <div class="card-value">$150.45</div>
+            <div class="card-value">${total_cost}</div>
         </div>
     """, unsafe_allow_html=True)
 
-# Card 6
-with col6:
-    st.markdown("""
+# Card 4
+with col4:
+    st.markdown(f"""
         <div class="card">
             <div class="card-title">🌱 Impact écologique estimé</div>
-            <div class="card-value">500kg CO2</div>
+            <div class="card-value">{total_impact} kg CO2</div>
         </div>
     """, unsafe_allow_html=True)
 

@@ -183,11 +183,11 @@ st.subheader("Rencontrez notre équipe 👩‍🍳👨‍🍳")
 # Définition des 5 membres
 base_path = os.path.join("client","assets")
 membres = [
-    {"nom": "Souraya", "role": "Chef de projet", "photo": f"{os.path.join(base_path,'membre1.jpg')}", "emoji_role": "👩‍💻"},
-    {"nom": "Bertrand", "role": "Développeur Backend", "photo": f"{os.path.join(base_path,'membre2.jpg')}", "emoji_role": "💻"},
-    {"nom": "Cyril", "role": "Développeur Backend", "photo": f"{os.path.join(base_path,'membre3.jpg')}", "emoji_role": "🖥️"},
-    {"nom": "Linh Nhi", "role": "Développeur Frontend", "photo": f"{os.path.join(base_path,'membre4.jpg')}", "emoji_role": "🎨"},
-    {"nom": "Daniella", "role": "Développeur Frontend", "photo": f"{os.path.join(base_path,'membre5.jpg')}", "emoji_role": "🎨"}
+    {"nom": "Souraya", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre1.jpg')}", "emoji_role": "👩‍💻"},
+    {"nom": "Bertrand", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre2.jpg')}", "emoji_role": "👩‍💻"},
+    {"nom": "Cyril", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre3.jpg')}", "emoji_role": "👩‍💻"},
+    {"nom": "Linh Nhi", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre4.jpg')}", "emoji_role": "👩‍💻"},
+    {"nom": "Daniella", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre5.jpg')}", "emoji_role": "👩‍💻"}
 ]
 
 # Création des colonnes pour chaque membre
