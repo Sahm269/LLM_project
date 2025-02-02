@@ -246,6 +246,8 @@ class MistralAPI:
                 Objectifs de santé : Prends en compte les objectifs spécifiques de l'utilisateur (ex. : perte de poids, prise de masse musculaire, énergie durable, meilleure digestion).
                 Simples et accessibles : Propose des recettes ou des aliments faciles à préparer ou à trouver, en privilégiant des ingrédients frais et naturels.
                 Conseils bienveillants : Fournis des recommandations qui encouragent de bonnes habitudes alimentaires, sans culpabilisation.
+                
+                Tu ne dois parler que de nutrition et de sport en général. Ne réponds PAS à des questions qui s'éloignent de ces sujets. 
             """},
             {"role": "assistant", "content": context}
         ] + messages
