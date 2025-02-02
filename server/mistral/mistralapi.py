@@ -294,5 +294,47 @@ class MistralAPI:
             title = title[:27] + "..."  # Tronquer proprement
 
         return title
+    
+    def extract_recipe_title(self, text: str, temperature: float = 0.3) -> str:
+        """
+        Extrait uniquement le titre d'une recette à partir d'une réponse complète du chatbot.
+
+        Args:
+            text (str): La réponse complète contenant une recette.
+            temperature (float, optional): Paramètre de créativité du modèle. Défaut : 0.3.
+
+        Returns:
+            str: Le titre résumé de la recette.
+        """
+        try:
+            chat_response = self.client.chat.complete(
+                model=self.model,
+                temperature=temperature,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Tu es un assistant qui extrait uniquement le titre d'une recette à partir d'un texte. "
+                                "Renvoie uniquement le titre en quelques mots, sans aucune autre information.",
+                    },
+                    {
+                        "role": "user",
+                        "content": text,
+                    },
+                ]
+            )
+
+            title = chat_response.choices[0].message.content.strip()
+
+            # 🔹 Vérification de la longueur pour éviter les réponses trop longues
+            if len(title) > 50:  # Limite à 50 caractères (ajustable)
+                title = title[:47] + "..."  # Tronquer proprement
+
+            return title
+
+        except Exception as e:
+            print(f"❌ Erreur lors de l'extraction du titre de la recette : {e}")
+            return "Recette inconnue"
+
+
 
 

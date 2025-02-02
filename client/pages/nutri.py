@@ -148,6 +148,33 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                     response += chunk.data.choices[0].delta.content
                     response_placeholder.markdown(response)
                     time.sleep(0.03)
+                
+                # 🔹 Vérifier si la réponse contient une suggestion de recette
+                
+                # 🔹 Vérifier si la réponse contient une suggestion de recette
+                keywords = ["recette", "plat", "préparer", "ingrédients"]
+
+                for word in keywords:
+                    if word in response.lower():  # Si un mot clé est détecté
+                        # 🔹 Demander à Mistral de générer un résumé court
+                        try:
+                            summarized_title = mistral.extract_recipe_title(text=response, temperature=0.3)  # Appel API Mistral
+
+                            # Vérifier et initialiser la liste des suggestions
+                            if "chatbot_suggestions" not in st.session_state:
+                                st.session_state["chatbot_suggestions"] = []
+
+                            # Ajouter uniquement le titre résumé si ce n'est pas un doublon
+                            if summarized_title and summarized_title not in st.session_state["chatbot_suggestions"]:
+                                st.session_state["chatbot_suggestions"].append(summarized_title)
+                                print(f"✅ Nouvelle suggestion ajoutée : {summarized_title}")
+
+                        except Exception as e:
+                            print(f"❌ Erreur lors du résumé de la suggestion : {e}")
+
+                        break  # On ne veut ajouter qu'une seule suggestion par réponse
+
+
 
                 end_time = time.time()  # 🔹 Fin du chronomètre
                 latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
