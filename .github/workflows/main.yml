@@ -1,20 +1,22 @@
-name: Sync to Hugging Face hub
+name: Sync to Hugging Face Hub
 
 on:
   push:
-    branches: [guardrail]
-
-  # to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    branches: [main]  # Exécute ce workflow à chaque push sur main
+  workflow_dispatch:  # Permet de le lancer manuellement depuis GitHub Actions
 
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-      - name: Push to hub
+          fetch-depth: 0  # Récupère tout l'historique du repo
+
+      - name: Push to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://sahm269:$HF_TOKEN@huggingface.co/spaces/Sahm269/NutrigenieLLM main
+        run: |
+          git remote add hf https://Sahm269:$HF_TOKEN@huggingface.co/spaces/Sahm269/NutrigenieLLM
+          git push --force hf main
