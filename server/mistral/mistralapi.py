@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import pandas as pd
+from typing import List
 
 # class MistralAPI:
 #     """
@@ -295,6 +296,52 @@ class MistralAPI:
 
         return title
     
+    def extract_multiple_recipes(self, text: str, temperature: float = 0.3) -> List[str]:
+        """
+        Extrait plusieurs titres de recettes à partir d'un texte donné.
+
+        Args:
+            text (str): La réponse contenant une ou plusieurs recettes.
+            temperature (float, optional): Niveau de créativité du modèle. Défaut : 0.3.
+
+        Returns:
+            List[str]: Une liste des titres de recettes extraits.
+        """
+        try:
+            chat_response = self.client.chat.complete(
+                model=self.model,
+                temperature=temperature,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Tu es un assistant qui extrait uniquement les titres des recettes mentionnées "
+                            "dans un texte donné. Réponds uniquement avec une liste de titres, séparés par des sauts de ligne, "
+                            "sans aucune autre information ni texte additionnel."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": text,
+                    },
+                ]
+            )
+
+            extracted_text = chat_response.choices[0].message.content.strip()
+
+            # 🔹 Séparer les titres par ligne et nettoyer la liste
+            recipes = [recipe.strip() for recipe in extracted_text.split("\n") if recipe.strip()]
+
+            # 🔹 Filtrer les doublons et limiter la longueur des titres
+            unique_recipes = list(set(recipes))  # Supprime les doublons
+            unique_recipes = [recipe[:50] + "..." if len(recipe) > 50 else recipe for recipe in unique_recipes]  # Limite à 50 caractères
+
+            return unique_recipes
+
+        except Exception as e:
+            print(f"❌ Erreur lors de l'extraction des recettes : {e}")
+            return []   
+    
     def extract_recipe_title(self, text: str, temperature: float = 0.3) -> str:
         """
         Extrait uniquement le titre d'une recette à partir d'une réponse complète du chatbot.
@@ -334,6 +381,8 @@ class MistralAPI:
         except Exception as e:
             print(f"❌ Erreur lors de l'extraction du titre de la recette : {e}")
             return "Recette inconnue"
+
+
 
 
 
