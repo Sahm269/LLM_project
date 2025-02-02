@@ -33,7 +33,7 @@ def get_recipes_count():
         return 0
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM recettes")
+        cursor.execute("SELECT COUNT(*) FROM suggestions_repas")
         result = cursor.fetchone()
         return result[0]  # Le nombre total de recettes
     except Exception as e:

@@ -111,7 +111,7 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown(f"""
         <div class="card">
-            <div class="card-title">🍲 Nombre total de recettes</div>
+            <div class="card-title">🍲 Nombre de recettes suggerées</div>
             <div class="card-value">{total_recipes}</div>
         </div>
     """, unsafe_allow_html=True)
