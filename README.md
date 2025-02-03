@@ -1,3 +1,13 @@
+---
+title: Image To Text App
+emoji: 📹
+colorFrom: blue
+colorTo: red
+sdk: streamlit
+app_file: main.py
+pinned: false
+---
+
 # Nutrigénie
 
 **Nutrigénie** est un assistant nutritionnel intelligent conçu pour aider les utilisateurs à adopter une alimentation saine et personnalisée. Basé sur des technologies de pointe en traitement du langage naturel et un système de **Retrieval-Augmented Generation (RAG)**, Nutrigénie fournit des conseils nutritionnels personnalisés et des recettes de cuisine adaptées aux besoins individuels.
