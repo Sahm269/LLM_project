@@ -1,42 +1,54 @@
-# LLM_project
+# Nutrigénie
 
-## architecture du projet 
+**Nutrigénie** est un assistant nutritionnel intelligent conçu pour aider les utilisateurs à adopter une alimentation saine et personnalisée. Basé sur des technologies de pointe en traitement du langage naturel et un système de **Retrieval-Augmented Generation (RAG)**, Nutrigénie fournit des conseils nutritionnels personnalisés et des recettes de cuisine adaptées aux besoins individuels.
 
-```r
+## 🌟 Fonctionnalités principales
 
-LLM-RAG-Recettes/
-├── app/                   # Code principal de l'application
-│   ├── main.py            # Point d'entrée de l'application (Streamlit)
-│   ├── utils/             # Fonctions utilitaires (gestion des données, calculs nutritionnels)
-│   ├── components/        # Composants spécifiques pour l'interface
-├── database/              # Scripts et modèles pour la base de données
-│   ├── schema.sql         # Schéma de la base de données
-│   ├── seed_data.sql      # Données initiales pour la base
-│   └── queries/           # Requêtes SQL organisées par fonction
-├── scraping/              # Scripts pour le scraping des recettes
-│   ├── marmiton_scraper.py
-│   ├── sainplement_scraper.py
-│   └── data/              # Données collectées (format JSON/CSV)
-├── models/                # Gestion des modèles de LLM
-│   ├── prompt_templates/  # Modèles de prompts pour la génération
-│   ├── memory/            # Gestion de la mémoire des interactions
-│   └── rag_pipeline.py    # Implémentation de la logique RAG
-├── security/              # Scripts et tests liés à la sécurité
-│   ├── input_validation.py
-│   ├── tests/             # Tests unitaires pour la sécurité
-├── tests/                 # Tests pour l'ensemble de l'application
-│   ├── test_app.py        # Tests de l'interface utilisateur
-│   ├── test_models.py     # Tests des modèles LLM
-│   └── test_scraping.py   # Tests des scripts de scraping
-├── docs/                  # Documentation
-│   ├── requirements.txt   # Dépendances Python
-│   ├── architecture.md    # Description de l'architecture du projet
-│   └── user_guide.md      # Guide utilisateur
-├── config/                # Fichiers de configuration
-│   ├── settings.yaml      # Configuration globale
-│   ├── database.yaml      # Configuration de la base de données
-├── Dockerfile             # Fichier pour créer une image Docker
-├── .gitignore             # Fichiers/dossiers à ignorer par Git
-└── README.md              # Description du projet
+- **Chatbot interactif** : Engage des conversations fluides et naturelles sur la nutrition.
+- **Recommandation de recettes** : Suggère des recettes de cuisine basées sur les préférences alimentaires et les besoins nutritionnels.
+- **Conseils personnalisés** : Fournit des recommandations sur les habitudes alimentaires et le mode de vie.
+- **Analyse des habitudes de vie** : Pose des questions ciblées pour mieux comprendre les besoins de l'utilisateur.
 
+## 🚀 Démo en ligne
+
+Accédez à Nutrigénie ici : [Nutrigénie sur Hugging Face Spaces](https://huggingface.co/spaces/Sahm269/NutrigenieLLM)
+
+## 📁 Installation locale (optionnel)
+
+Si vous souhaitez cloner et exécuter le projet en local :
+
+```bash
+# Clonez le dépôt
+git clone https://github.com/Sahm269/LLM_project.git
+cd LLM_project
+
+# Créez un environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Sous Windows : venv\Scripts\activate
+
+# Installez les dépendances
+pip install -r requirements.txt
+
+# Lancez l'application
+streamlit run main.py
 ```
+
+## 🌐 Utilisation
+
+1. Accédez à l'application via le lien fourni ou lancez-la en local.
+2. Engagez une conversation avec Nutrigénie en posant des questions sur la nutrition.
+3. Recevez des conseils personnalisés et des suggestions de recettes.
+
+
+## 👾 Technologies utilisées
+
+- **Python** : Langage principal pour la logique de l'application.
+- **Streamlit** : Framework pour créer des applications web interactives.
+- **Hugging Face Spaces** : Hébergement de l'application.
+- **PostGreSQL/ChromaDB** : Gestion de la base de données pour les conversations et les recettes.
+- **RAG (Retrieval-Augmented Generation)** : Pour améliorer la précision des réponses.
+
+---
+
+**Nutrigénie** — Votre assistant personnel pour une alimentation saine et équilibrée !
+

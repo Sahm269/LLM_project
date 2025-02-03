@@ -5,3 +5,4 @@ requests
 python-dotenv
 psycopg2-binary
 streamlit_option_menu
+langdetect

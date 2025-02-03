@@ -18,6 +18,9 @@ from server.db.dbmanager import (
     load_chatbot_suggestions,
     save_chatbot_suggestions
 )
+import logging
+logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler()])
+logger = logging.getLogger(__name__)
 
 
 # 🔹 Chargement des variables de session pour éviter les rechargements inutiles
@@ -45,7 +48,7 @@ mistral = st.session_state.mistral_instance  # Récupérer l'instance stockée
 try:
     guardrail = Guardrail()
 except Exception as e:
-    st.error(f"❌ Guardrail introuvable. Veuillez relancer le conteneur. Détails : {e}")
+    st.error(f"❌ Guardrail introuvable. Veuillez relancer l'appli ou contacter l'équipe de développement. Détails : {e}")
     st.stop()
 
 # 🔹 Chargement de la base de données
@@ -114,6 +117,13 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     input_tokens = mistral.count_input_tokens([{"content": prompt}])
     print(f"✅ Nombre de tokens en entrée : {input_tokens}")
 
+    # 🔸 Vérifier si le message est dans une langue supportée par le guardrail
+    is_supported = guardrail.analyze_language(prompt)
+    if not is_supported:
+        st.warning("⚠️ Votre message n'est pas rédigé dans les langues actuellement supportées (FR, EN, DE, ES).")
+        st.warning("Si votre message est pourtant dans une des langues supportées, le reformuler ou l'allonger peut être utile.")
+        st.stop()
+    
     # 🔸 Vérifier la sécurité du message
     is_safe = guardrail.analyze_query(prompt)
 
@@ -157,6 +167,15 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                 print("🔄 Génération de réponse en cours...")
                 stream_response = mistral.stream(st.session_state.messages, temperature=0.5)
 
+                # for chunk in stream_response:
+                #     response += chunk.data.choices[0].delta.content
+                # if response == "Injection":
+                #     st.warning("⚠️ Votre message ne respecte pas nos consignes.")
+                #     guardrail.incremental_learning(prompt, 1) # 1 car injection. Le tuning ne se fait que sur les injections
+                #     st.stop()
+                # else: # on réinitialise
+                #     response = ""
+
                 # Compteur pour les tokens de sortie
                 output_tokens = 0
 
@@ -196,7 +215,7 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                             print(f"❌ Erreur lors de l'extraction des suggestions : {e}")
 
                         break  # On ne veut ajouter qu'une seule suggestion par réponse
-
+            
 
 
 
@@ -217,8 +236,8 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                     response_placeholder.markdown("❌ Erreur lors de la génération de la réponse.")
                     st.stop()
 
-            if stream_response is not None:
-                break  
+            if response is not None:
+                break
 
         if retries >= max_retries:
             st.error("❌ Impossible d'obtenir une réponse après plusieurs tentatives.")
