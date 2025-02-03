@@ -7,6 +7,7 @@
 *.gz filter=lfs diff=lfs merge=lfs -text
 *.h5 filter=lfs diff=lfs merge=lfs -text
 *.joblib filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
 *.lfs.* filter=lfs diff=lfs merge=lfs -text
 *.mlmodel filter=lfs diff=lfs merge=lfs -text
 *.model filter=lfs diff=lfs merge=lfs -text
@@ -40,4 +41,3 @@ client/assets/logo.png filter=lfs diff=lfs merge=lfs -text
 client/assets/membre1.jpg filter=lfs diff=lfs merge=lfs -text
 client/assets/membre2.jpg filter=lfs diff=lfs merge=lfs -text
 client/assets/membre3.jpg filter=lfs diff=lfs merge=lfs -text
-server/security/data/guardrail_dataset_train_multi.json filter=lfs diff=lfs merge=lfs -text
