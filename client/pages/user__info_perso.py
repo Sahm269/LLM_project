@@ -62,9 +62,9 @@ def info_perso():
                 table_name = "utilisateurs"
                 
                 
-                set_clause = """login = %s, email = %s, objectifs_nutritionnels = %s, poids = %s, taille = %s,
-                                regime_particulier = %s, activite_physique = %s, objectif_calorique = %s"""
-                condition = "id_utilisateur = %s"
+                set_clause = """login = ?, email = ?, objectifs_nutritionnels = ?, poids = ?, taille = ?,
+                                regime_particulier = ?, activite_physique = ?, objectif_calorique = ?"""
+                condition = "id_utilisateur = ?"
 
                 # Rassembler les paramètres à passer à la méthode
                 params = (nom, email, objectifs_nutritionnels, poids, taille, 
