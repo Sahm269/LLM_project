@@ -120,8 +120,10 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
     # 🔸 Vérifier si le message est dans une langue supportée par le guardrail
     is_supported = guardrail.analyze_language(prompt)
     if not is_supported:
-        st.warning("⚠️ Votre message n'est pas rédigé dans les langues actuellement supportées (FR, EN, DE, ES).")
-        st.warning("Si votre message est pourtant dans une des langues supportées, le reformuler ou l'allonger peut être utile.")
+        st.warning("""
+                   ⚠️ Votre message n'est pas rédigé dans les langues actuellement supportées (FR, EN, DE, ES).   
+                   Si votre message est pourtant dans une des langues supportées, le reformuler ou l'allonger peut être utile.
+                   """)
         st.stop()
     
     # 🔸 Vérifier la sécurité du message
@@ -148,7 +150,7 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
 
     # 🔸 Si le message est interdit, afficher l'alerte mais NE PAS l'envoyer à Mistral
     if not is_safe:
-        st.warning("⚠️ Votre message ne respecte pas nos consignes.")
+        st.warning("⚠️ Votre message ne respecte pas l'usage de notre chatbot.")
         st.stop()  # Arrêter l'exécution ici pour ne PAS envoyer à Mistral
 
     retries = 0
@@ -167,25 +169,31 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                 print("🔄 Génération de réponse en cours...")
                 stream_response = mistral.stream(st.session_state.messages, temperature=0.5)
 
-                # for chunk in stream_response:
-                #     response += chunk.data.choices[0].delta.content
-                # if response == "Injection":
-                #     st.warning("⚠️ Votre message ne respecte pas nos consignes.")
-                #     guardrail.incremental_learning(prompt, 1) # 1 car injection. Le tuning ne se fait que sur les injections
-                #     st.stop()
-                # else: # on réinitialise
-                #     response = ""
-
                 # Compteur pour les tokens de sortie
+                # Comment devenir une meilleure personne dans la vie ?
                 output_tokens = 0
+                temp_stream = [chunk.data.choices[0].delta.content for chunk in stream_response]
+                # Calculer les tokens pour ce morceau de réponse
+                temp_output_token = sum([mistral.count_output_tokens(chunk) for chunk in temp_stream])
+                reponse = ' '.join(temp_stream)
 
-                for chunk in stream_response:
-                    response += chunk.data.choices[0].delta.content
-                    response_placeholder.markdown(response)
-                    # Calculer les tokens pour ce morceau de réponse
-                    output_tokens += mistral.count_output_tokens(chunk.data.choices[0].delta.content)
-                
-                    time.sleep(0.03)
+                if response == "Injection":
+                    st.warning("⚠️ Votre message ne respecte pas l'usage de notre chatbot.")
+                    # guardrail.incremental_learning(prompt, 1) # 1 car injection. Le tuning ne se fait que sur les injections
+                    st.stop()
+                    # end_time = time.time()  # 🔹 Fin du chronomètre
+                    break
+                else: # on réinitialise
+                    response = ""
+                    for chunk in temp_stream:
+                        response += chunk
+                        response_placeholder.markdown(response)
+                        # # Calculer les tokens pour ce morceau de réponse
+                        # output_tokens += mistral.count_output_tokens(chunk.data.choices[0].delta.content)
+                    
+                        time.sleep(0.03)
+
+
                 
                 # 🔹 Vérifier si la réponse contient une suggestion de recette
                 
@@ -219,11 +227,11 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
 
 
 
-                end_time = time.time()  # 🔹 Fin du chronomètre
-                latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
+                # end_time = time.time()  # 🔹 Fin du chronomètre
+                # latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
 
-                print(f"✅ Réponse générée en {latency} secondes.")
-                print(f"✅ Nombre de tokens de sortie : {output_tokens}")
+                # print(f"✅ Réponse générée en {latency} secondes.")
+                # print(f"✅ Nombre de tokens de sortie : {output_tokens}")
             except Exception as e:
                 if hasattr(e, "status_code") and e.status_code == 429:
                     retries += 1
@@ -236,7 +244,12 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                     response_placeholder.markdown("❌ Erreur lors de la génération de la réponse.")
                     st.stop()
 
-            if response is not None:
+            if response != "": # On sort de la boucle
+                end_time = time.time()  # 🔹 Fin du chronomètre
+                latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
+
+                print(f"✅ Réponse générée en {latency} secondes.")
+                print(f"✅ Nombre de tokens de sortie : {output_tokens}")
                 break
 
         if retries >= max_retries:
@@ -268,3 +281,9 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
         # 🔹 Enregistrer la réponse de l'assistant
         st.session_state.messages.append({"role": "assistant", "content": response, "temps_traitement":latency, "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
         save_message(db_manager, st.session_state.id_conversation, role="assistant", content=response, temps_traitement=latency, total_cout=total_cost, impact_eco=total_emissions)
+
+
+    if response == "Injection":
+        guardrail.incremental_learning(prompt, [1]) # 1 car injection. Le tuning ne se fait que sur les injections
+        print("🤖 Entraînement du guardrail à reconnaître le prompt comme dangereux effectué avec succès")
+        st.stop()

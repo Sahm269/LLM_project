@@ -81,8 +81,9 @@ class Guardrail:
         # Extraction des caractéristiques
         embedding = model.encode(X_new)
         
+        
         # Mise à jour incrémentale du modèle
-        self.guardrail.partial_fit(embedding, y_new, classes=[0, 1])
+        self.guardrail.partial_fit(embedding.reshape(1,-1), y_new, classes=[0, 1])
 
         with open(os.path.join("server","security","storage","guardrail_multi.pkl"), "wb") as f:
             dump(self.guardrail, f)
