@@ -68,8 +68,8 @@ def sign_in(navigate_to):
     # Bouton de connexion
     if st.button("Se connecter"):
         # Vérification des identifiants en base de données
-        user = db_manager.fetch_by_condition("utilisateurs", "login = %s", (login,))
-        print("user",user)
+        user = db_manager.fetch_by_condition("utilisateurs", "login = ?", (login,))
+        print("user",user[0]["id_utilisateur"])
 
         if user:
             user = user[0]

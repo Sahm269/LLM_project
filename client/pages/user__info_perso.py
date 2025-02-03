@@ -17,7 +17,7 @@ def info_perso():
             st.error("Utilisateur non trouvé.")
         else:
             user_info = user_info[0]  # Récupérer la première ligne (unique utilisateur)
-            print(user_info)  # Récupérer et afficher les informations de l'utilisateur
+            # print(user_info)  # Récupérer et afficher les informations de l'utilisateur
             
             # Premier formulaire (Nom, Email, Mot de passe)
             col1, col2, col3 = st.columns(3)

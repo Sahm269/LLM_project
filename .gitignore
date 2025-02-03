@@ -17,6 +17,9 @@ Thumbs.db
 # Fichiers de logs
 *.log
 
+# Fichiers de base de données
+*.db
+
 # Fichiers de distribution
 dist/
 build/

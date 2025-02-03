@@ -33,7 +33,7 @@ def sign_up(navigate_to):
                     "login": login,
                     "email": email,
                     "mot_de_passe": hashed_password
-                }], "id_utilisateur")
+                }])
                 
                 st.success("Compte créé avec succès. Vous pouvez vous connecter.")
                 st.session_state["current_page"] = "connexion"
