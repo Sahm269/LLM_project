@@ -23,9 +23,10 @@ jobs:
           git lfs install
           git lfs pull
           git lfs track "*.json"
+          git lfs track "server/security/data/guardrail_dataset_train_multi.json"
+          git lfs track "envLLM/Lib/site-packages/numpy.libs/libscipy_openblas64_-43e11ff0749b8cbe0a615c9cf6737e0e.dll"
+          git lfs track "envLLM/Lib/site-packages/pyarrow/arrow.dll"
           git add .gitattributes
-          git add server/security/data/*.json
-          git add server/security/storage/*.pkl
           git commit -m "Configure Git LFS"
       - name: Push to hub
         env:
