@@ -5,10 +5,11 @@ from dotenv import load_dotenv
 
 import sys
 
+
 def sign_up(navigate_to):
     db_manager = st.session_state.get("db_manager")
     st.title("Inscription")
-    
+
     # Champs obligatoires
     login = st.text_input("Pseudo")
     email = st.text_input("Email")
@@ -18,7 +19,7 @@ def sign_up(navigate_to):
     # Lien pour rediriger vers la page de connexion
     if st.button("Déjà un compte ? connectez-vous."):
         navigate_to("connexion")
-    
+
     # Vérification des champs obligatoires
     if st.button("Créer un compte"):
         if not login or not email or not password or not confirm_password:
@@ -29,12 +30,11 @@ def sign_up(navigate_to):
             hashed_password = generate_password_hash(password)
             try:
                 # Insérer l'utilisateur dans la base de données
-                db_manager.insert_data_from_dict("utilisateurs", [{
-                    "login": login,
-                    "email": email,
-                    "mot_de_passe": hashed_password
-                }])
-                
+                db_manager.insert_data_from_dict(
+                    "utilisateurs",
+                    [{"login": login, "email": email, "mot_de_passe": hashed_password}],
+                )
+
                 st.success("Compte créé avec succès. Vous pouvez vous connecter.")
                 st.session_state["current_page"] = "connexion"
             except Exception as e:

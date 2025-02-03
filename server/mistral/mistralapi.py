@@ -6,7 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import pandas as pd
 
-import tiktoken 
+import tiktoken
 
 from typing import List
 
@@ -25,7 +25,9 @@ class MistralAPI:
         """
         api_key = os.getenv("MISTRAL_API_KEY")
         if not api_key:
-            raise ValueError("No MISTRAL_API_KEY found. Please set it in environment variables!")
+            raise ValueError(
+                "No MISTRAL_API_KEY found. Please set it in environment variables!"
+            )
         self.client = Mistral(api_key=api_key)
         self.model = model
 
@@ -33,7 +35,7 @@ class MistralAPI:
         if MistralAPI.embedding_model is None:
             print("🔄 Chargement du modèle d'embedding...")
             MistralAPI.embedding_model = SentenceTransformer(
-                'dangvantuan/french-document-embedding', trust_remote_code=True
+                "dangvantuan/french-document-embedding", trust_remote_code=True
             )
             print("✅ Modèle d'embedding chargé avec succès.")
         else:
@@ -62,7 +64,9 @@ class MistralAPI:
         embeddings_path = "./server/data/embeddings.pkl"
 
         if not os.path.exists(data_path) or not os.path.exists(embeddings_path):
-            raise FileNotFoundError("❌ Les fichiers de données ou d'embeddings sont introuvables !")
+            raise FileNotFoundError(
+                "❌ Les fichiers de données ou d'embeddings sont introuvables !"
+            )
 
         # Charger les données clean
         self.df = pd.read_parquet(data_path)
@@ -81,15 +85,17 @@ class MistralAPI:
             self.collection.add(
                 ids=[str(i)],  # ID unique
                 embeddings=[embedding.tolist()],  # Embedding sous forme de liste
-                metadatas=[{
-                    "Titre": row_data["Titre"],
-                    "Temps de préparation": row_data["Temps de préparation"],
-                    "Ingrédients": row_data["Ingrédients"],
-                    "Instructions": row_data["Instructions"],
-                    "Infos régime": row_data["Infos régime"],
-                    "Valeurs pour 100g": row_data["Valeurs pour 100g"],
-                    "Valeurs par portion": row_data["Valeurs par portion"]
-                }]
+                metadatas=[
+                    {
+                        "Titre": row_data["Titre"],
+                        "Temps de préparation": row_data["Temps de préparation"],
+                        "Ingrédients": row_data["Ingrédients"],
+                        "Instructions": row_data["Instructions"],
+                        "Infos régime": row_data["Infos régime"],
+                        "Valeurs pour 100g": row_data["Valeurs pour 100g"],
+                        "Valeurs par portion": row_data["Valeurs par portion"],
+                    }
+                ],
             )
         print(f"✅ {self.collection.count()} recettes ajoutées dans ChromaDB.")
 
@@ -100,8 +106,7 @@ class MistralAPI:
         query_embedding = MistralAPI.embedding_model.encode(query).tolist()
 
         results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k
+            query_embeddings=[query_embedding], n_results=top_k
         )
 
         if not results["ids"][0]:
@@ -118,7 +123,9 @@ class MistralAPI:
         """
         Récupère une réponse contextuelle en intégrant les données de ChromaDB si l'utilisateur demande une recette.
         """
-        query = messages[-1]["content"]  # Récupérer la dernière question de l'utilisateur
+        query = messages[-1][
+            "content"
+        ]  # Récupérer la dernière question de l'utilisateur
         recipes = self.search_recipe(query, top_k=3)
 
         if recipes:  # Si on trouve des recettes, les afficher
@@ -134,8 +141,11 @@ class MistralAPI:
             context = "Je n’ai pas trouvé de recette exacte en base, mais voici une idée basée sur ton besoin :"
 
         # Injecter le contexte + instructions précises pour Mistral
-        enriched_messages = [
-            {"role": "system", "content": """
+        enriched_messages = (
+            [
+                {
+                    "role": "system",
+                    "content": """
                 Tu as deux rôles distincts et complémentaires :
 
                 Expert en nutrition et en alimentation saine
@@ -215,15 +225,16 @@ class MistralAPI:
 
                 "Quels sont des exemples de repas sains pour un régime végétarien ?" → Réponse nutritionnelle adaptée
                 "Comment améliorer ma digestion après un repas copieux ?" → Réponse nutritionnelle adaptée
-            """},
-            {"role": "assistant", "content": context}
-        ] + messages
+            """,
+                },
+                {"role": "assistant", "content": context},
+            ]
+            + messages
+        )
 
         # Générer une réponse avec Mistral
         chat_response = self.client.chat.stream(
-            model=self.model,
-            temperature=temperature,
-            messages=enriched_messages
+            model=self.model, temperature=temperature, messages=enriched_messages
         )
 
         return chat_response
@@ -233,7 +244,7 @@ class MistralAPI:
         Enrichit la réponse avec la RAG avant d'envoyer à Mistral.
         """
         return self.get_contextual_response(messages, temperature)
-    
+
     def auto_wrap(self, text: str, temperature: float = 0.5) -> str:
         """
         Génère un titre court basé sur la requête utilisateur, limité à 30 caractères.
@@ -245,13 +256,10 @@ class MistralAPI:
                 {
                     "role": "system",
                     "content": "Résume le sujet de l'instruction ou de la question suivante en quelques mots. "
-                            "Ta réponse doit être claire, concise et faire 30 caractères au maximum.",
+                    "Ta réponse doit être claire, concise et faire 30 caractères au maximum.",
                 },
-                {
-                    "role": "user",
-                    "content": text,
-                },
-            ]
+                {"role": "user", "content": text,},
+            ],
         )
 
         title = chat_response.choices[0].message.content.strip()
@@ -261,8 +269,10 @@ class MistralAPI:
             title = title[:27] + "..."  # Tronquer proprement
 
         return title
-    
-    def extract_multiple_recipes(self, text: str, temperature: float = 0.3) -> List[str]:
+
+    def extract_multiple_recipes(
+        self, text: str, temperature: float = 0.3
+    ) -> List[str]:
         """
         Extrait plusieurs titres de recettes à partir d'un texte donné.
 
@@ -286,28 +296,32 @@ class MistralAPI:
                             "sans aucune autre information ni texte additionnel."
                         ),
                     },
-                    {
-                        "role": "user",
-                        "content": text,
-                    },
-                ]
+                    {"role": "user", "content": text,},
+                ],
             )
 
             extracted_text = chat_response.choices[0].message.content.strip()
 
             # 🔹 Séparer les titres par ligne et nettoyer la liste
-            recipes = [recipe.strip() for recipe in extracted_text.split("\n") if recipe.strip()]
+            recipes = [
+                recipe.strip()
+                for recipe in extracted_text.split("\n")
+                if recipe.strip()
+            ]
 
             # 🔹 Filtrer les doublons et limiter la longueur des titres
             unique_recipes = list(set(recipes))  # Supprime les doublons
-            unique_recipes = [recipe[:50] + "..." if len(recipe) > 50 else recipe for recipe in unique_recipes]  # Limite à 50 caractères
+            unique_recipes = [
+                recipe[:50] + "..." if len(recipe) > 50 else recipe
+                for recipe in unique_recipes
+            ]  # Limite à 50 caractères
 
             return unique_recipes
 
         except Exception as e:
             print(f"❌ Erreur lors de l'extraction des recettes : {e}")
-            return []   
-    
+            return []
+
     def extract_recipe_title(self, text: str, temperature: float = 0.3) -> str:
         """
         Extrait uniquement le titre d'une recette à partir d'une réponse complète du chatbot.
@@ -327,13 +341,10 @@ class MistralAPI:
                     {
                         "role": "system",
                         "content": "Tu es un assistant qui extrait uniquement le titre d'une recette à partir d'un texte. "
-                                "Renvoie uniquement le titre en quelques mots, sans aucune autre information.",
+                        "Renvoie uniquement le titre en quelques mots, sans aucune autre information.",
                     },
-                    {
-                        "role": "user",
-                        "content": text,
-                    },
-                ]
+                    {"role": "user", "content": text,},
+                ],
             )
 
             title = chat_response.choices[0].message.content.strip()
@@ -348,10 +359,6 @@ class MistralAPI:
             print(f"❌ Erreur lors de l'extraction du titre de la recette : {e}")
             return "Recette inconnue"
 
-
-
-
-
     def count_tokens(self, text: str) -> int:
         """
         Compte le nombre de tokens dans un texte donné.
@@ -363,7 +370,7 @@ class MistralAPI:
         Returns:
             int: Le nombre de tokens du texte analysé.
         """
-        encoder = tiktoken.get_encoding("cl100k_base") 
+        encoder = tiktoken.get_encoding("cl100k_base")
         tokens = encoder.encode(text)
         return len(tokens)
 
@@ -379,7 +386,9 @@ class MistralAPI:
         """
         total_tokens = 0
         for message in messages:
-            total_tokens += self.count_tokens(message['content'])  # Ajoute les tokens du message
+            total_tokens += self.count_tokens(
+                message["content"]
+            )  # Ajoute les tokens du message
         return total_tokens
 
     def count_output_tokens(self, response: str) -> int:
@@ -392,5 +401,6 @@ class MistralAPI:
         Returns:
             int: Le nombre de tokens de la réponse de Mistral analysée.
         """
-        return self.count_tokens(response)  # Utilise la même méthode de comptage des tokens
-
+        return self.count_tokens(
+            response
+        )  # Utilise la même méthode de comptage des tokens

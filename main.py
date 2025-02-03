@@ -1,5 +1,6 @@
 # data_link = https://github.com/Sahm269/LLM_project/tree/souraya/data
 import streamlit as st
+
 # from streamlit_option_menu import option_menu
 # from client.pages.home import home_page
 # from projects.LLM_project.client.pages.nutri_old import nutri_page
@@ -15,7 +16,7 @@ st.set_page_config(
     page_title=APP_TITLE,
     page_icon="client/assets/avatar_bot_small.jpg",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # with st.sidebar:
@@ -55,6 +56,7 @@ def navigate_to(page_name):
     st.session_state["current_page"] = page_name
     st.rerun()
 
+
 # Gestion de la déconnexion
 def logout_user():
     keys_to_clear = ["logged_in", "user", "current_page"]
@@ -62,6 +64,7 @@ def logout_user():
         if key in st.session_state:
             del st.session_state[key]
     navigate_to("connexion")
+
 
 # Gestion centralisée de la navigation
 def handle_navigation():
@@ -77,19 +80,23 @@ def handle_navigation():
             st.session_state["current_page"] = "accueil"
             st.rerun()
 
+
 # Définition des pages disponibles
 PAGES = {
     "accueil": {"file": "client/pages/home.py", "title": "🏠 Accueil"},
     "chatbot": {"file": "client/pages/nutri.py", "title": "🤖 Chat Bot"},
     "dashboard": {"file": "client/pages/dashboard.py", "title": "📊 Tableau de Bord"},
-    "user": {"file": "client/pages/user.py", "title": lambda: f"👤 Mon Compte {st.session_state.get('user', '')}"}
+    "user": {
+        "file": "client/pages/user.py",
+        "title": lambda: f"👤 Mon Compte {st.session_state.get('user', '')}",
+    },
 }
 
 # Fonction principale
 def main():
 
     st.markdown(
-            """
+        """
             <style>
 
 
@@ -112,8 +119,8 @@ def main():
 
             </style>
             """,
-            unsafe_allow_html=True
-        )
+        unsafe_allow_html=True,
+    )
 
     # Gestion de la navigation
     handle_navigation()
@@ -140,9 +147,10 @@ def main():
         # Ne pas afficher la barre de navigation
         if st.session_state["current_page"] == "connexion":
             sign_in(navigate_to)
-            
+
         elif st.session_state["current_page"] == "inscription":
             sign_up(navigate_to)
+
 
 if __name__ == "__main__":
     main()

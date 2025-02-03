@@ -3,7 +3,8 @@ import os
 
 # def home_page():
 
-st.markdown("""
+st.markdown(
+    """
     <style>
         /*
         body, .stApp {
@@ -99,39 +100,50 @@ st.markdown("""
         }
 
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-st.markdown(f"""
+st.markdown(
+    f"""
     <h2 class="welcome-title">
         Bienvenue sur NutriGénie <span class="user-name">{st.session_state['user']}</span> 🍽️!
     </h2>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-st.markdown("""
+st.markdown(
+    """
     <br>
     <div class="presentation-text">
         " Laissez-nous vous guider à travers une expérience culinaire sur-mesure. Découvrez des recettes adaptées à vos préférences et suivez vos habitudes alimentaires en toute simplicité. "
     </div>
     <br>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-logo_path = os.path.join("client","assets","logo.png")
+logo_path = os.path.join("client", "assets", "logo.png")
 
 # centrer le logo
 cola, colb, colc = st.columns(3)
 
 with cola:
-    pass 
+    pass
 with colb:
     st.image(logo_path, use_container_width=True, caption=None)
 with colc:
-    pass 
+    pass
 
-st.markdown("""
+st.markdown(
+    """
         <br>
         <h3 style="color:#2a4b47; text-align:center;">🔧 Fonctionnalités principales de l'application :</h3>
         <br>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
 
 # Fonctionnalités disposées horizontalement par paires
 col1, col2 = st.columns(2)
@@ -139,7 +151,8 @@ col1, col2 = st.columns(2)
 with col1:
 
     # Fonctionnalités 1 et 2
-    st.markdown("""
+    st.markdown(
+        """
         <div class="features">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">🍽️</span>
@@ -154,11 +167,14 @@ with col1:
             </div>
             <p>Consultez l'historique de vos repas consommés et suivez vos habitudes alimentaires au fil du temps.</p>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 with col2:
     # Fonctionnalités 3 et 4
-    st.markdown("""
+    st.markdown(
+        """
         <div class="features">
             <div style="display: flex; align-items: center;">
                 <span class="feature-icon">🛒</span>
@@ -173,7 +189,9 @@ with col2:
             </div>
             <p>Obtenez des suggestions de repas en fonction de vos goûts et de vos besoins nutritionnels.</p>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Présentation des membres de l'équipe
 st.markdown("<hr>", unsafe_allow_html=True)  # Ajoute une ligne de séparation
@@ -181,13 +199,38 @@ st.markdown("<hr>", unsafe_allow_html=True)  # Ajoute une ligne de séparation
 st.subheader("Rencontrez notre équipe 👩‍🍳👨‍🍳")
 
 # Définition des 5 membres
-base_path = os.path.join("client","assets")
+base_path = os.path.join("client", "assets")
 membres = [
-    {"nom": "Souraya", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre1.jpg')}", "emoji_role": "👩‍💻"},
-    {"nom": "Bertrand", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre2.jpg')}", "emoji_role": "👩‍💻"},
-    {"nom": "Cyril", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre3.jpg')}", "emoji_role": "👩‍💻"},
-    {"nom": "Linh Nhi", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre4.jpg')}", "emoji_role": "👩‍💻"},
-    {"nom": "Daniella", "role": "M2 SISE", "photo": f"{os.path.join(base_path,'membre5.jpg')}", "emoji_role": "👩‍💻"}
+    {
+        "nom": "Souraya",
+        "role": "M2 SISE",
+        "photo": f"{os.path.join(base_path,'membre1.jpg')}",
+        "emoji_role": "👩‍💻",
+    },
+    {
+        "nom": "Bertrand",
+        "role": "M2 SISE",
+        "photo": f"{os.path.join(base_path,'membre2.jpg')}",
+        "emoji_role": "👩‍💻",
+    },
+    {
+        "nom": "Cyril",
+        "role": "M2 SISE",
+        "photo": f"{os.path.join(base_path,'membre3.jpg')}",
+        "emoji_role": "👩‍💻",
+    },
+    {
+        "nom": "Linh Nhi",
+        "role": "M2 SISE",
+        "photo": f"{os.path.join(base_path,'membre4.jpg')}",
+        "emoji_role": "👩‍💻",
+    },
+    {
+        "nom": "Daniella",
+        "role": "M2 SISE",
+        "photo": f"{os.path.join(base_path,'membre5.jpg')}",
+        "emoji_role": "👩‍💻",
+    },
 ]
 
 # Création des colonnes pour chaque membre
@@ -196,9 +239,12 @@ cols = st.columns(5)
 for i, membre in enumerate(membres):
     with cols[i]:
         st.image(membre["photo"], use_container_width=True, caption=None)
-        st.markdown(f"""
+        st.markdown(
+            f"""
             <div class="team-member">
                 <div class="team-name">{membre['nom']}</div>
                 <div class="team-name-role">{membre['emoji_role']} {membre['role']}</div>
             </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )

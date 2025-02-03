@@ -25,7 +25,6 @@ def get_embedding(documents: list[str]) -> NDArray[np.float32]:
     return model.encode(documents)
 
 
-
 class Guardrail:
     """
     A class to handle guardrail analysis based on query embeddings.
@@ -38,11 +37,11 @@ class Guardrail:
         """
         Initializes the Guardrail class with a guardrail model instance.
         """
-        file_path = os.path.join("server","security","storage","guardrail_multi.pkl")
+        file_path = os.path.join("server", "security", "storage", "guardrail_multi.pkl")
         with open(file_path, "rb") as f:
             self.guardrail = load(f)
 
-    def analyze_language(self, query:str) -> bool:
+    def analyze_language(self, query: str) -> bool:
         """
         Analyzes the given query to determine what language it is written in and whether it is english, french, german or spanish.
 
@@ -53,8 +52,8 @@ class Guardrail:
             bool: Returns `False` if the query is not a supported language, `True` otherwise.
         """
         det = detect(query)
-        return det in ["en","fr","de","es"]
-    
+        return det in ["en", "fr", "de", "es"]
+
     def analyze_query(self, query: str) -> bool:
         """
         Analyzes the given query to determine if it passes the guardrail check.
@@ -68,7 +67,6 @@ class Guardrail:
         embed_query = get_embedding(documents=[query])
         pred = self.guardrail.predict(embed_query.reshape(1, -1))
         return pred != 1  # Return True if pred is not 1, otherwise False
-    
 
     def incremental_learning(self, X_new, y_new):
         """
@@ -80,10 +78,11 @@ class Guardrail:
         """
         # Extraction des caractéristiques
         embedding = model.encode(X_new)
-        
-        
-        # Mise à jour incrémentale du modèle
-        self.guardrail.partial_fit(embedding.reshape(1,-1), y_new, classes=[0, 1])
 
-        with open(os.path.join("server","security","storage","guardrail_multi.pkl"), "wb") as f:
+        # Mise à jour incrémentale du modèle
+        self.guardrail.partial_fit(embedding.reshape(1, -1), y_new, classes=[0, 1])
+
+        with open(
+            os.path.join("server", "security", "storage", "guardrail_multi.pkl"), "wb"
+        ) as f:
             dump(self.guardrail, f)

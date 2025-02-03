@@ -9,7 +9,7 @@ from server.db.db import (
     get_average_latency,
     get_daily_requests,
     get_total_cost,
-    get_total_impact
+    get_total_impact,
 )
 
 # Récupérer les données pour afficher sur le dashboard
@@ -32,7 +32,8 @@ st.markdown(
 )
 
 # Ajouter le CSS pour les cards avec animations et un design moderne
-st.markdown(""" 
+st.markdown(
+    """ 
     <style>
         .title-container {
             background-color: #6A5ACD;
@@ -101,7 +102,9 @@ st.markdown("""
             color: #0086b3;
         }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # Créer des colonnes pour disposer les cards
@@ -109,49 +112,67 @@ col1, col2, col3, col4 = st.columns(4)
 
 # Card 1
 with col1:
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="card">
             <div class="card-title">🍲 Nombre de recettes suggerées</div>
             <div class="card-value">{total_recipes}</div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Card 2
 with col2:
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="card">
             <div class="card-title">⏱️ Latence moyenne</div>
             <div class="card-value">{average_latency}s</div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Card 3
 with col3:
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="card">
             <div class="card-title">💸 Coût total des requêtes</div>
             <div class="card-value">${total_cost}</div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Card 4
 with col4:
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="card">
             <div class="card-title">🌱 Impact écologique estimé</div>
             <div class="card-value">{total_impact} kg CO2</div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Graphique des requêtes par jour
 st.markdown("### 📅 Nombre de requêtes par jour")
 
-fig = go.Figure(data=[go.Scatter(x=df_requests['date'], y=df_requests['nombre_requetes'], mode='lines+markers')])
+fig = go.Figure(
+    data=[
+        go.Scatter(
+            x=df_requests["date"],
+            y=df_requests["nombre_requetes"],
+            mode="lines+markers",
+        )
+    ]
+)
 
 fig.update_layout(
-    xaxis_title="Date",
-    yaxis_title="Nombre de requêtes",
-    template="plotly_dark"
+    xaxis_title="Date", yaxis_title="Nombre de requêtes", template="plotly_dark"
 )
 
 st.plotly_chart(fig)

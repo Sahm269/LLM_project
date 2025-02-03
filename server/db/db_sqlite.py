@@ -13,13 +13,11 @@ logger = logging.getLogger(__name__)
 
 if platform.system() == "Windows":
     # Specify the path to your .env file
-    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
+    dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
     # Load the .env file
     load_dotenv(dotenv_path)
 else:
     load_dotenv()
-
-
 
 
 # Establish PostgreSQL connection
@@ -37,7 +35,6 @@ else:
 #     logger.error(f"Database connection error: {err}")
 
 
-
 # Configuration de la base de données SQLite
 DB_NAME = "chat_history.db"
 conn = sqlite3.connect(DB_NAME, check_same_thread=False)
@@ -45,6 +42,7 @@ conn = sqlite3.connect(DB_NAME, check_same_thread=False)
 # api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
 # api_key = os.environ.get("MISTRAL_API_KEY")
 # mistral_client = Mistral(api_key=api_key)
+
 
 def get_cursor():
     """
@@ -58,19 +56,22 @@ def get_cursor():
     except sqlite3.Error as err:
         logger.error(f"Error obtaining cursor: {err}")
         return None
-    
+
 
 def init_db():
     cursor = get_cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
                 CREATE TABLE IF NOT EXISTS conversations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     created_at TEXT NOT NULL,
                     title TEXT NOT NULL
                 )
-            ''')
-        cursor.execute('''
+            """
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 conversation_id INTEGER NOT NULL,
@@ -79,7 +80,8 @@ def init_db():
                 timestamp TEXT NOT NULL,
                 FOREIGN KEY (conversation_id) REFERENCES conversations (id)
             )
-        ''')
+        """
+        )
         return
     except sqlite3.Error as err:
         logger.error(f"Error while connecting to database: {err}")
@@ -94,8 +96,10 @@ def save_message(conversation_id, role, content):
     cursor = get_cursor()
     try:
         timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        cursor.execute("INSERT INTO messages (conversation_id, role, content, timestamp) VALUES (?, ?, ?, ?)",
-                (conversation_id, role, content, timestamp))
+        cursor.execute(
+            "INSERT INTO messages (conversation_id, role, content, timestamp) VALUES (?, ?, ?, ?)",
+            (conversation_id, role, content, timestamp),
+        )
     except sqlite3.Error as err:
         logger.error(f"Error while connecting to database: {err}")
         return
@@ -104,11 +108,15 @@ def save_message(conversation_id, role, content):
         conn.commit()
         # conn.close()
 
+
 def create_conversation(title):
     cursor = get_cursor()
     try:
         created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("INSERT INTO conversations (created_at, title) VALUES (?, ?)", (created_at, title))
+        cursor.execute(
+            "INSERT INTO conversations (created_at, title) VALUES (?, ?)",
+            (created_at, title),
+        )
         conversation_id = cursor.lastrowid
         return conversation_id
     except sqlite3.Error as err:
@@ -117,12 +125,15 @@ def create_conversation(title):
     finally:
         conn.commit()
         # conn.close()
-    
+
 
 def load_messages(conversation_id):
     cursor = get_cursor()
     try:
-        cursor.execute("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC", (conversation_id,))
+        cursor.execute(
+            "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC",
+            (conversation_id,),
+        )
         data = [{"role": row[0], "content": row[1]} for row in cursor.fetchall()]
         return data
     except sqlite3.Error as err:
@@ -132,10 +143,11 @@ def load_messages(conversation_id):
         conn.commit()
         # conn.close()
 
+
 def load_conversations():
     cursor = get_cursor()
     try:
-        cursor.execute("SELECT * FROM conversations ORDER BY created_at DESC") 
+        cursor.execute("SELECT * FROM conversations ORDER BY created_at DESC")
         data = cursor.fetchall()
         return data
     except sqlite3.Error as err:
@@ -145,11 +157,15 @@ def load_conversations():
         conn.commit()
         # conn.close()
 
+
 def update_conversation(conversation_id):
     cursor = get_cursor()
     try:
         new_timer = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("UPDATE conversations SET created_at = ? WHERE id = ?",(new_timer, conversation_id))
+        cursor.execute(
+            "UPDATE conversations SET created_at = ? WHERE id = ?",
+            (new_timer, conversation_id),
+        )
     except sqlite3.Error as err:
         logger.error(f"Error while connecting to database: {err}")
         raise Exception(status_code=500, detail=str(err))

@@ -3,6 +3,7 @@ from werkzeug.security import check_password_hash
 import os
 from dotenv import load_dotenv
 
+
 def sign_in(navigate_to):
 
     st.markdown(
@@ -43,12 +44,12 @@ def sign_in(navigate_to):
 
         </style>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     logo_path = "assets/logo.png"
 
-    #centrer le logo
+    # centrer le logo
     col1, col2, col3 = st.columns([1.5, 1.5, 1])
 
     with col2:
@@ -64,16 +65,15 @@ def sign_in(navigate_to):
     login = st.text_input("👤 Pseudo")
     password = st.text_input("🔒 Mot de passe", type="password")
 
-    
     # Bouton de connexion
     if st.button("Se connecter"):
         # Vérification des identifiants en base de données
         user = db_manager.fetch_by_condition("utilisateurs", "login = ?", (login,))
-        print("user",user[0]["id_utilisateur"])
+        print("user", user[0]["id_utilisateur"])
 
         if user:
             user = user[0]
-            user_id = user["id_utilisateur"] # Récupération de l'ID utilisateur
+            user_id = user["id_utilisateur"]  # Récupération de l'ID utilisateur
             hashed_password = user["mot_de_passe"]  # Récupération du mot de passe hashé
 
             # Vérification du mot de passe
@@ -92,7 +92,7 @@ def sign_in(navigate_to):
             st.error("❌ Utilisateur non trouvé.")
 
     # Lien vers l'inscription
-    if st.button("Pas de compte ? Inscrivez-vous.") :
+    if st.button("Pas de compte ? Inscrivez-vous."):
         navigate_to("inscription")  # Redirection vers l'inscription
 
 

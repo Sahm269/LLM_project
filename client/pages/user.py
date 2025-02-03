@@ -6,7 +6,8 @@ from client.pages.user__favoris import favoris
 
 
 # Appliquer le style personnalisé aux headers
-st.markdown("""
+st.markdown(
+    """
     <style>
         /* Style global pour les headers */
         h3 {
@@ -41,21 +42,36 @@ st.markdown("""
             font-family: New Icon;
         }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Affichage du message de bienvenue
-st.markdown(f"""
+st.markdown(
+    f"""
     <h2 class="welcome-title">
         Bienvenue sur NutriGénie <span class="user-name">{st.session_state['user']}</span> 🍽️!
     </h2>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Définition des onglets horizontaux
-tabs = st.tabs(["🧑‍💼 Informations personnelles ", "🍽️ Meal Plan", "🛒 Liste des courses", "⭐ Favoris"])
+tabs = st.tabs(
+    [
+        "🧑‍💼 Informations personnelles ",
+        "🍽️ Meal Plan",
+        "🛒 Liste des courses",
+        "⭐ Favoris",
+    ]
+)
 
 # Onglet 1 : Informations personnelles
 with tabs[0]:
-    st.markdown('<h3 class="stHeader">🧑‍💼 Informations personnelles</h3>', unsafe_allow_html=True)
+    st.markdown(
+        '<h3 class="stHeader">🧑‍💼 Informations personnelles</h3>',
+        unsafe_allow_html=True,
+    )
     info_perso()  # Charger la page `info_perso.py`
 
 # Onglet 2 : Meal Plan
