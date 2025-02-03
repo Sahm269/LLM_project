@@ -1,7 +1,0 @@
-/.venv
-/.venv
-/chroma_db
-*.pyc
-/envLLM
-meal_plan.csv
-.streamlit/secrets.toml

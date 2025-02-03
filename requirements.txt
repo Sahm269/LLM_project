@@ -1,3 +1,0 @@
-streamlit
-pysqlite3-wheels
-mistralai
