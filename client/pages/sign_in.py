@@ -69,9 +69,9 @@ def sign_in(navigate_to):
     if st.button("Se connecter"):
         # Vérification des identifiants en base de données
         user = db_manager.fetch_by_condition("utilisateurs", "login = ?", (login,))
-        print("user", user[0]["id_utilisateur"])
 
         if user:
+            print("user", user[0]["id_utilisateur"])
             user = user[0]
             user_id = user["id_utilisateur"]  # Récupération de l'ID utilisateur
             hashed_password = user["mot_de_passe"]  # Récupération du mot de passe hashé
