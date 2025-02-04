@@ -9,7 +9,7 @@ import pandas as pd
 from typing import List, Dict, Tuple
 import os
 import sys
-
+import unicodedata
 # Configuration du logging
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
@@ -1051,3 +1051,134 @@ def save_chatbot_suggestions(db_manager, user_id, suggestions: List[Tuple]):
         db_manager.connection.commit()
     except sqlite3.Error as err:  # Remplacer psycopg2.Error par sqlite3.Error pour SQLite
         logger.error(f"Erreur lors de l'enregistrement des suggestions : {err}")
+
+def save_recipes_and_ingredients(db_manager, user_id: int, recipes: List[Dict[str, str]]):
+    """
+    Sauvegarde les recettes et leurs ingrédients en base de données.
+
+    Args:
+        db_manager: Instance de DBManager.
+        user_id (int): ID de l'utilisateur.
+        recipes (List[Dict[str, str]]): Liste des recettes contenant "titre" et "ingredients".
+    """
+    query_recipe = """
+    INSERT INTO suggestions_repas (id_utilisateur, repas_suggestion, motif_suggestion, date_heure)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    """
+
+    query_ingredients = """
+    INSERT INTO liste_courses (id_utilisateur, ingredients, date_creation, status)
+    VALUES (?, ?, CURRENT_TIMESTAMP, 'non acheté')
+    """
+
+    try:
+        for recipe in recipes:
+            # Insérer le titre de la recette
+            db_manager.cursor.execute(query_recipe, (user_id, recipe["titre"], "Chatbot"))
+            
+            # Insérer les ingrédients associés
+            db_manager.cursor.execute(query_ingredients, (user_id, recipe["ingredients"]))
+        
+        db_manager.connection.commit()
+    except sqlite3.Error as err:
+        logger.error(f"❌ Erreur lors de l'enregistrement des recettes : {err}")
+
+
+def normalize_text(text):
+    """Normalise un texte en supprimant les accents et en le mettant en minuscules"""
+    text = text.lower().strip()
+    text = unicodedata.normalize("NFKD", text).encode("ASCII", "ignore").decode("utf-8")
+    return text
+
+def save_recipes_with_ingredients(db_manager, user_id, title, ingredients):
+    """
+    Sauvegarde une recette et ses ingrédients en base de données,
+    en évitant les doublons liés aux différences de majuscules ou d'accents.
+    """
+    if not ingredients:
+        print(f"⚠️ La recette '{title}' n'a pas d'ingrédients à enregistrer.")
+        return
+
+    # 🔹 Normaliser le titre pour éviter les doublons
+    normalized_title = normalize_text(title)
+
+    # 🔹 Vérifier si la recette existe déjà (en ignorant les majuscules et accents)
+    query_check = "SELECT id_suggestion FROM suggestions_repas WHERE LOWER(repas_suggestion) = LOWER(?) AND id_utilisateur = ?"
+    result = db_manager.execute_safe(query_check, (normalized_title, user_id), fetch=True)
+
+    if result:
+        recipe_id = result[0][0]
+        # 🔹 Mise à jour des ingrédients si la recette existe déjà
+        query_update = "UPDATE suggestions_repas SET ingredients = ? WHERE id_suggestion = ?"
+        db_manager.execute_safe(query_update, (ingredients, recipe_id))
+        print(f"🔄 Mise à jour des ingrédients pour '{title}'.")
+    else:
+        # 🔹 Insertion d'une nouvelle recette avec son titre et ingrédients
+        query_insert = "INSERT INTO suggestions_repas (id_utilisateur, repas_suggestion, ingredients) VALUES (?, ?, ?)"
+        db_manager.execute_safe(query_insert, (user_id, title, ingredients))
+        print(f"✅ Recette '{title}' enregistrée avec ingrédients.")
+
+
+
+def get_recipes_and_ingredients(db_manager, user_id: int) -> List[Dict[str, str]]:
+    """
+    Récupère les recettes et leurs ingrédients stockés en base.
+
+    Args:
+        db_manager: Instance de DBManager.
+        user_id (int): ID de l'utilisateur.
+
+    Returns:
+        List[Dict[str, str]]: Liste des recettes avec leurs ingrédients.
+    """
+    query = """
+    SELECT repas_suggestion, ingredients 
+    FROM suggestions_repas 
+    WHERE id_utilisateur = ?
+    """
+    try:
+        db_manager.cursor.execute(query, (user_id,))
+        recipes = [{"titre": row[0], "ingredients": row[1]} for row in db_manager.cursor.fetchall()]
+        return recipes
+    except sqlite3.Error as err:
+        print(f"❌ Erreur lors de la récupération des recettes : {err}")
+        return []
+
+def add_ingredients_column_if_not_exists(db_manager):
+    """
+    Vérifie et ajoute la colonne 'ingredients' à la table 'suggestions_repas' si elle n'existe pas.
+    """
+    try:
+        db_manager.cursor.execute("PRAGMA table_info(suggestions_repas);")
+        columns = [row[1] for row in db_manager.cursor.fetchall()]
+        
+        if "ingredients" not in columns:
+            db_manager.cursor.execute("ALTER TABLE suggestions_repas ADD COLUMN ingredients TEXT;")
+            db_manager.connection.commit()
+            print("✅ Colonne 'ingredients' ajoutée avec succès.")
+        else:
+            print("✅ La colonne 'ingredients' existe déjà.")
+    except sqlite3.Error as err:
+        print(f"❌ Erreur lors de la mise à jour de la table : {err}")
+
+def check_recipes_with_ingredients(db_manager, user_id):
+    """
+    Vérifie si les recettes enregistrées ont bien des ingrédients.
+    """
+    query = "SELECT repas_suggestion, ingredients FROM suggestions_repas WHERE id_utilisateur = ?"
+    
+    try:
+        db_manager.cursor.execute(query, (user_id,))
+        results = db_manager.cursor.fetchall()
+        
+        if results:
+            print("✅ Recettes et ingrédients trouvés en base :")
+            for row in results:
+                print(f"📌 Recette: {row[0]} - Ingrédients: {row[1]}")
+        else:
+            print("⚠️ Aucune recette avec ingrédients trouvée en base.")
+
+    except sqlite3.Error as err:
+        print(f"❌ Erreur lors de la récupération des recettes : {err}")
+
+

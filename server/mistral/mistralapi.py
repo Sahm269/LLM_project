@@ -8,7 +8,7 @@ import pandas as pd
 
 import tiktoken
 
-from typing import List
+from typing import List, Dict
 
 
 class MistralAPI:
@@ -322,16 +322,17 @@ class MistralAPI:
             print(f"❌ Erreur lors de l'extraction des recettes : {e}")
             return []
 
-    def extract_recipe_title(self, text: str, temperature: float = 0.3) -> str:
+
+    def extract_recipes_and_ingredients(self, text: str, temperature: float = 0.3) -> List[Dict[str, str]]:
         """
-        Extrait uniquement le titre d'une recette à partir d'une réponse complète du chatbot.
+        Extrait les titres et les ingrédients des recettes à partir d'un texte donné.
 
         Args:
-            text (str): La réponse complète contenant une recette.
-            temperature (float, optional): Paramètre de créativité du modèle. Défaut : 0.3.
+            text (str): La réponse contenant une ou plusieurs recettes.
+            temperature (float, optional): Niveau de créativité du modèle. Défaut : 0.3.
 
         Returns:
-            str: Le titre résumé de la recette.
+            List[Dict[str, str]]: Une liste de dictionnaires contenant les titres et les ingrédients des recettes.
         """
         try:
             chat_response = self.client.chat.complete(
@@ -340,24 +341,71 @@ class MistralAPI:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Tu es un assistant qui extrait uniquement le titre d'une recette à partir d'un texte. "
-                        "Renvoie uniquement le titre en quelques mots, sans aucune autre information.",
+                        "content": (
+                            "Tu es un assistant qui extrait uniquement les informations de recettes depuis un texte donné. "
+                            "Réponds avec une liste de recettes où chaque entrée contient un titre et une liste d'ingrédients. "
+                            "Le format doit être : 'Titre: [Nom de la recette], Ingrédients: [liste des ingrédients]'. "
+                            "Ne donne aucune autre information."
+                        ),
                     },
                     {"role": "user", "content": text,},
                 ],
             )
 
-            title = chat_response.choices[0].message.content.strip()
+            extracted_text = chat_response.choices[0].message.content.strip()
+            
+            # 🔹 Extraction des recettes sous forme de dictionnaire
+            recipes = []
+            for line in extracted_text.split("\n"):
+                if "Titre:" in line and "Ingrédients:" in line:
+                    parts = line.split("Ingrédients:")
+                    title = parts[0].replace("Titre:", "").strip()
+                    ingredients = parts[1].strip()
+                    recipes.append({"titre": title, "ingredients": ingredients})
 
-            # 🔹 Vérification de la longueur pour éviter les réponses trop longues
-            if len(title) > 50:  # Limite à 50 caractères (ajustable)
-                title = title[:47] + "..."  # Tronquer proprement
-
-            return title
+            return recipes
 
         except Exception as e:
-            print(f"❌ Erreur lors de l'extraction du titre de la recette : {e}")
-            return "Recette inconnue"
+            print(f"❌ Erreur lors de l'extraction des recettes : {e}")
+            return []
+    
+
+    # def extract_recipe_title(self, text: str, temperature: float = 0.3) -> str:
+    #     """
+    #     Extrait uniquement le titre d'une recette à partir d'une réponse complète du chatbot.
+
+    #     Args:
+    #         text (str): La réponse complète contenant une recette.
+    #         temperature (float, optional): Paramètre de créativité du modèle. Défaut : 0.3.
+
+    #     Returns:
+    #         str: Le titre résumé de la recette.
+    #     """
+    #     try:
+    #         chat_response = self.client.chat.complete(
+    #             model=self.model,
+    #             temperature=temperature,
+    #             messages=[
+    #                 {
+    #                     "role": "system",
+    #                     "content": "Tu es un assistant qui extrait uniquement le titre d'une recette à partir d'un texte. "
+    #                     "Renvoie uniquement le titre en quelques mots, sans aucune autre information.",
+    #                 },
+    #                 {"role": "user", "content": text,},
+    #             ],
+    #         )
+
+    #         title = chat_response.choices[0].message.content.strip()
+
+    #         # 🔹 Vérification de la longueur pour éviter les réponses trop longues
+    #         if len(title) > 50:  # Limite à 50 caractères (ajustable)
+    #             title = title[:47] + "..."  # Tronquer proprement
+
+    #         return title
+
+    #     except Exception as e:
+    #         print(f"❌ Erreur lors de l'extraction du titre de la recette : {e}")
+    #         return "Recette inconnue"
 
     def count_tokens(self, text: str) -> int:
         """

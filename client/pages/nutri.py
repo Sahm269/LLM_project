@@ -17,12 +17,15 @@ from server.db.dbmanager import (
     delete_conversation,
     load_chatbot_suggestions,
     save_chatbot_suggestions,
+    save_recipes_with_ingredients,
+    add_ingredients_column_if_not_exists
 )
+
 import logging
+
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
-
 
 # 🔹 Chargement des variables de session pour éviter les rechargements inutiles
 if "id_conversation" not in st.session_state:
@@ -57,7 +60,7 @@ except Exception as e:
 # 🔹 Chargement de la base de données
 db_manager = st.session_state["db_manager"]
 user_id = st.session_state["user_id"]
-
+add_ingredients_column_if_not_exists(db_manager)
 if "chatbot_suggestions" not in st.session_state:
     st.session_state["chatbot_suggestions"] = load_chatbot_suggestions(
         db_manager, user_id
@@ -242,8 +245,6 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
 
                         time.sleep(0.03)
 
-                # 🔹 Vérifier si la réponse contient une suggestion de recette
-
                 # 🔹 Vérifier si la réponse contient des suggestions de recettes
                 keywords = ["recette", "plat", "préparer", "ingrédients"]
 
@@ -278,18 +279,55 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
                                 save_chatbot_suggestions(
                                     db_manager, user_id, new_recipes
                                 )
+
                         except Exception as e:
                             print(
                                 f"❌ Erreur lors de l'extraction des suggestions : {e}"
                             )
 
                         break  # On ne veut ajouter qu'une seule suggestion par réponse
+                time.sleep(1)   
+                # 🔹 EXTRACTION ET ENREGISTREMENT DES RECETTES
+                # 🔍 Vérifier si la réponse contient des suggestions de recettes
+                # 🔹 EXTRACTION ET ENREGISTREMENT DES RECETTES
+                # 🔍 Vérifier si la réponse contient des suggestions de recettes
+                for word in keywords:
+                    if word in response.lower():
+                        try:
+                            print("🔍 Détection de recettes, extraction en cours...")
 
-                # end_time = time.time()  # 🔹 Fin du chronomètre
-                # latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
+                            # 🔹 Utiliser `extract_recipes_and_ingredients` pour extraire plusieurs recettes
+                            extracted_recipes = mistral.extract_recipes_and_ingredients(response)
 
-                # print(f"✅ Réponse générée en {latency} secondes.")
-                # print(f"✅ Nombre de tokens de sortie : {output_tokens}")
+                            if extracted_recipes:
+                                print(f"✅ {len(extracted_recipes)} recettes détectées : {extracted_recipes}")
+
+                                # 🔹 Sauvegarder les recettes et leurs ingrédients dans la base de données
+                                for recipe in extracted_recipes:
+                                    title = recipe["titre"].lstrip("-").strip()  # Supprime les tirets et espaces inutiles
+                                    ingredients = recipe["ingredients"].strip()
+
+                                    # 🔹 Supprimer une virgule finale si présente dans le titre
+                                    title_cleaned = title.rstrip(",")  # Enlève uniquement la virgule à la fin
+
+                                    print(f"💾 Enregistrement de la recette '{title_cleaned}' avec les ingrédients : {ingredients}")
+
+                                    save_recipes_with_ingredients(db_manager, user_id, title_cleaned, ingredients)
+
+                            else:
+                                print("⚠️ Aucune recette détectée.")
+
+                        except Exception as e:
+                            print(f"❌ Erreur lors de l'extraction des recettes et ingrédients : {e}")
+
+                        break  # Éviter d'ajouter plusieurs fois la même recette
+
+
+                end_time = time.time()  # 🔹 Fin du chronomètre
+                latency = round(end_time - start_time, 2)  # 🔹 Calcul de la latence
+
+                print(f"✅ Réponse générée en {latency} secondes.")
+                print(f"✅ Nombre de tokens de sortie : {output_tokens}")
             except Exception as e:
                 if hasattr(e, "status_code") and e.status_code == 429:
                     retries += 1
@@ -368,3 +406,19 @@ if prompt := st.chat_input("Dîtes quelque-chose"):
             "🤖 Entraînement du guardrail à reconnaître le prompt comme dangereux effectué avec succès"
         )
         st.stop()
+# def check_if_ingredients_saved(db_manager, user_id):
+#     query = "SELECT repas_suggestion, ingredients FROM suggestions_repas WHERE id_utilisateur = ?"
+#     recipes = db_manager.execute_safe(query, (user_id,), fetch=True)
+
+#     if recipes:
+#         print("✅ Recettes enregistrées en base :")
+#         for recipe in recipes:
+#             recette_nom = recipe[0]
+#             ingredients = recipe[1] if recipe[1] else "⚠️ Aucun ingrédient enregistré"
+#             print(f"📌 {recette_nom} - Ingrédients : {ingredients}")
+#     else:
+#         print("⚠️ Aucune recette enregistrée.")
+
+# # Appel pour tester
+# check_if_ingredients_saved(db_manager, user_id)
+
