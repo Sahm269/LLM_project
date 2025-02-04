@@ -147,6 +147,13 @@ def mealplan():
         st.write("⚠️ Aucune suggestion du chatbot pour le moment.")
 
     # 📤 Exportation du planning en CSV
-    if st.button("📥 Exporter en CSV"):
-        df.to_csv("meal_plan.csv")
+    if st.download_button(
+        label="📥 Exporter en CSV", 
+        data=df.to_csv(index=False,sep=";").encode('utf-8'), 
+        file_name="meal_plan.csv", 
+        mime="text/csv"):
         st.success("✅ Plan exporté en CSV avec succès !")
+
+    # if st.button("📥 Exporter en CSV"):
+    #     df.to_csv("meal_plan.csv")
+    #     st.success("✅ Plan exporté en CSV avec succès !")
