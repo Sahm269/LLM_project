@@ -149,7 +149,7 @@ def mealplan():
     # 📤 Exportation du planning en CSV
     if st.download_button(
         label="📥 Exporter en CSV", 
-        data=df.to_csv(index=False,sep=";").encode('utf-8'), 
+        data=df.to_csv(index=False,sep=";").encode('utf-8-sig'), 
         file_name="meal_plan.csv", 
         mime="text/csv"):
         st.success("✅ Plan exporté en CSV avec succès !")
